@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
+use OGame\Enums\FleetMissionType;
 use OGame\Models\Alliance;
 use OGame\Models\AllianceMember;
 use OGame\Models\BuddyRequest;
@@ -180,7 +181,7 @@ class FleetUnionServiceTest extends TestCase
         $mission2->refresh();
         $this->assertEquals($union->id, $mission2->union_id);
         $this->assertEquals(2, $mission2->union_slot);
-        $this->assertEquals(2, $mission2->mission_type); // Converted to ACS Attack
+        $this->assertEquals(FleetMissionType::AcsAttack, $mission2->mission_type); // Converted to ACS Attack
     }
 
     /**
@@ -253,7 +254,7 @@ class FleetUnionServiceTest extends TestCase
         $mission2->refresh();
         $this->assertEquals($union->id, $mission2->union_id);
         $this->assertEquals(2, $mission2->union_slot);
-        $this->assertEquals(2, $mission2->mission_type); // Converted to ACS Attack
+        $this->assertEquals(FleetMissionType::AcsAttack, $mission2->mission_type); // Converted to ACS Attack
     }
 
     /**

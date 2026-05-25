@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Date;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\Models\FleetMission;
 use OGame\Services\JumpGateService;
@@ -247,7 +248,7 @@ class JumpGateTest extends MoonTestCase
         $fleetMission->user_id = $foreignPlanet->getPlayer()->getId();
         $fleetMission->planet_id_from = $foreignPlanet->getPlanetId();
         $fleetMission->planet_id_to = $this->moonService->getPlanetId();
-        $fleetMission->mission_type = 1; // Attack
+        $fleetMission->mission_type = FleetMissionType::Attack;
         $fleetMission->time_departure = (int) Date::now()->subMinutes(10)->timestamp;
         $fleetMission->time_arrival = (int) Date::now()->subMinutes(1)->timestamp; // Already arrived
         $fleetMission->processed = 0; // Not yet processed
@@ -271,7 +272,7 @@ class JumpGateTest extends MoonTestCase
         $fleetMission->user_id = $foreignPlanet->getPlayer()->getId();
         $fleetMission->planet_id_from = $foreignPlanet->getPlanetId();
         $fleetMission->planet_id_to = $this->moonService->getPlanetId();
-        $fleetMission->mission_type = 1; // Attack
+        $fleetMission->mission_type = FleetMissionType::Attack;
         $fleetMission->time_departure = (int) Date::now()->timestamp;
         $fleetMission->time_arrival = (int) Date::now()->addHour()->timestamp; // Still in transit
         $fleetMission->processed = 0;
@@ -293,7 +294,7 @@ class JumpGateTest extends MoonTestCase
         $fleetMission->user_id = $this->moonService->getPlayer()->getId(); // Own player
         $fleetMission->planet_id_from = $this->secondPlanetService->getPlanetId();
         $fleetMission->planet_id_to = $this->moonService->getPlanetId();
-        $fleetMission->mission_type = 3; // Transport
+        $fleetMission->mission_type = FleetMissionType::Transport;
         $fleetMission->time_departure = (int) Date::now()->subMinutes(10)->timestamp;
         $fleetMission->time_arrival = (int) Date::now()->subMinutes(1)->timestamp; // Already arrived
         $fleetMission->processed = 0;
@@ -316,7 +317,7 @@ class JumpGateTest extends MoonTestCase
         $fleetMission->user_id = $foreignPlanet->getPlayer()->getId();
         $fleetMission->planet_id_from = $foreignPlanet->getPlanetId();
         $fleetMission->planet_id_to = $this->moonService->getPlanetId();
-        $fleetMission->mission_type = 1; // Attack
+        $fleetMission->mission_type = FleetMissionType::Attack;
         $fleetMission->time_departure = (int) Date::now()->subMinutes(10)->timestamp;
         $fleetMission->time_arrival = (int) Date::now()->subMinutes(1)->timestamp;
         $fleetMission->processed = 1; // Already processed

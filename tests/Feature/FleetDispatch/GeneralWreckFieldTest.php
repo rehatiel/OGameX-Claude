@@ -91,7 +91,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Set up: defender with defenses to inflict losses without wiping the fleet.
@@ -103,7 +103,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
         $this->travel($fleetMissionDuration + 1)->seconds();
         $this->get('/overview');
 
-        $returnMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $returnMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($returnMission, 'A return mission should exist after the attacker survives the battle.');
         $returnMission->wreck_field_data = [
             ['machine_name' => 'cruiser', 'quantity' => 31, 'repair_progress' => 0],
@@ -181,7 +181,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens, all attackers destroyed)
@@ -260,7 +260,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)
@@ -358,7 +358,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)
@@ -428,7 +428,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival and return
@@ -499,7 +499,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)
@@ -582,7 +582,7 @@ class GeneralWreckFieldTest extends FleetDispatchTestCase
 
         // Get the mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens, solar satellites will be destroyed)

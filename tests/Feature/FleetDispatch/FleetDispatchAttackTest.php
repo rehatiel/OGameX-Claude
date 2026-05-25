@@ -233,7 +233,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
             ->update(['metal' => 12000, 'crystal' => 0, 'deuterium' => 0]);
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($mission, 'Attack mission should exist');
 
         $this->travelTo(Date::createFromTimestamp($mission->time_arrival + 10));
@@ -289,7 +289,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Get time it takes for the fleet to travel to the second planet.
@@ -398,7 +398,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Advance time by 5 seconds.
@@ -424,7 +424,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
         $response->assertJsonFragment(['eventText' => $this->missionName . ' (R)']);
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
         $fleetMission = $fleetMissionService->getFleetMissionById($fleetMissionId, false);
 
@@ -473,7 +473,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Advance time by 10 seconds
@@ -583,7 +583,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Get time it takes for the fleet to travel to the second planet.
@@ -713,7 +713,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Get time it takes for the fleet to travel to the second planet.
@@ -782,7 +782,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get fleet mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Calculate fleet mission duration
@@ -843,7 +843,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get fleet mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Calculate fleet mission duration
@@ -915,7 +915,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get fleet mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Calculate fleet mission duration
@@ -977,7 +977,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get fleet mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Calculate fleet mission duration
@@ -1062,7 +1062,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
             // Get fleet mission
             $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-            $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+            $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
             $fleetMissionId = $fleetMission->id;
 
             // Calculate fleet mission duration
@@ -1163,7 +1163,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
         $foreignPlanet->addResources(new Resources(0, 0, -1000000, 0));
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMissionService->calculateFleetMissionDuration($this->planetService, $foreignPlanet->getPlanetCoordinates(), $unitCollection, resolve(AttackMission::class));
 
         // Set time to fleet mission duration + 1 second.
@@ -1201,7 +1201,7 @@ class FleetDispatchAttackTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Get time it takes for the fleet to travel to the second planet.

@@ -90,7 +90,7 @@ class ReaperDebrisCollectionTest extends FleetDispatchTestCase
 
         // Get the mission to calculate travel time
         $fleetMissionService = resolve(\OGame\Services\FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)
@@ -155,6 +155,11 @@ class ReaperDebrisCollectionTest extends FleetDispatchTestCase
         \OGame\Models\Message::where('battle_report_id', '!=', null)->delete();
         \OGame\Models\BattleReport::query()->delete();
 
+        // Ensure debris field is enabled regardless of previous test state
+        $settingsService = resolve(\OGame\Services\SettingsService::class);
+        $settingsService->set('debris_field_from_ships', 30);
+        $settingsService->set('debris_field_from_defense', 0);
+
         // Set up: attacker is NOT General class (using Collector to prove it works for all classes)
         $attacker = $this->planetService;
         $attackerPlayer = $attacker->getPlayer();
@@ -194,7 +199,7 @@ class ReaperDebrisCollectionTest extends FleetDispatchTestCase
 
         // Get the mission to calculate travel time
         $fleetMissionService = resolve(\OGame\Services\FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)
@@ -270,7 +275,7 @@ class ReaperDebrisCollectionTest extends FleetDispatchTestCase
 
         // Get the mission to calculate travel time
         $fleetMissionService = resolve(\OGame\Services\FleetMissionService::class, ['player' => $attacker->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process arrival (battle happens)

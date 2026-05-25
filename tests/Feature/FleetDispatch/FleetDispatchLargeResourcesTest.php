@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\FleetDispatch;
 
+use Illuminate\Support\Facades\DB;
 use OGame\GameObjects\Models\Units\UnitCollection;
 use OGame\Models\Resources;
 use OGame\Services\ObjectService;
@@ -26,9 +27,12 @@ class FleetDispatchLargeResourcesTest extends FleetDispatchTestCase
         // 10,000 Large Cargo ships = 250,000,000 total capacity
         $this->planetAddUnit('large_cargo', 10000);
 
-        // Add large resources to the planet (75M of each + buffer for fuel consumption)
-        // Fuel consumption for 10k Large Cargo ships can be ~50k-100k depending on distance
-        $this->planetAddResources(new Resources(75000000, 75000000, 75100000, 0));
+        // Set resources directly to known values to prevent test isolation issues
+        // (use DB update to override accumulated state from previous tests)
+        DB::table('planets')
+            ->where('id', $this->planetService->getPlanetId())
+            ->update(['metal' => 75000000, 'crystal' => 75000000, 'deuterium' => 75100000]);
+        $this->planetService->reloadPlanet();
     }
 
     /**

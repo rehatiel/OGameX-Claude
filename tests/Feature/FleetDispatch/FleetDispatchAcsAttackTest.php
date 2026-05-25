@@ -5,6 +5,7 @@ namespace Tests\Feature\FleetDispatch;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use OGame\Enums\CharacterClass;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\GameMissions\AttackMission;
 use OGame\GameObjects\Models\Units\UnitCollection;
@@ -248,7 +249,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $activeMissions = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer();
         $this->assertCount(1, $activeMissions);
         $mission = $activeMissions->first();
-        $this->assertEquals(1, $mission->mission_type, 'Mission should be type 1 (Attack) before union creation');
+        $this->assertEquals(FleetMissionType::Attack, $mission->mission_type, 'Mission should be type 1 (Attack) before union creation');
 
         // Create union via API
         $response = $this->post('/ajax/fleet/union/create', [
@@ -260,7 +261,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
 
         // Verify mission converted to ACS Attack (type 2)
         $mission->refresh();
-        $this->assertEquals(2, $mission->mission_type, 'Mission should be type 2 (ACS Attack) after union creation');
+        $this->assertEquals(FleetMissionType::AcsAttack, $mission->mission_type, 'Mission should be type 2 (ACS Attack) after union creation');
         $this->assertNotNull($mission->union_id, 'Mission should have a union_id');
         $this->assertEquals(1, $mission->union_slot, 'Initiator should have slot 1');
     }
@@ -281,7 +282,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
 
         // Get the fleet mission
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union with ally invited
         $response = $this->post('/ajax/fleet/union/create', [
@@ -319,7 +320,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $response = $this->post('/ajax/fleet/union/create', [
             'fleetID' => $mission->id,
@@ -359,7 +360,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $mission->id,
@@ -390,7 +391,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $mission->id,
@@ -436,7 +437,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
 
         // Get mission and create union
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $initiatorMission->id,
@@ -471,7 +472,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         // Verify both missions are in the union
         $allyMission->refresh();
         $this->assertEquals($unionId, $allyMission->union_id, 'Ally mission should be in the union');
-        $this->assertEquals(2, $allyMission->mission_type, 'Ally mission should be ACS Attack type');
+        $this->assertEquals(FleetMissionType::AcsAttack, $allyMission->mission_type, 'Ally mission should be ACS Attack type');
         $this->assertEquals(2, $allyMission->union_slot, 'Ally should have slot 2');
 
         // Advance time to arrival
@@ -507,7 +508,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -587,7 +588,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $mission->id,
@@ -627,7 +628,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union with ally
         $this->post('/ajax/fleet/union/create', [
@@ -669,7 +670,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -753,7 +754,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -853,7 +854,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $initiatorOutboundDuration = $initiatorMission->time_arrival - $initiatorMission->time_departure;
 
         // Create union
@@ -935,7 +936,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -1004,7 +1005,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -1088,7 +1089,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -1181,7 +1182,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -1245,7 +1246,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [
@@ -1322,7 +1323,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $settingsService = resolve(SettingsService::class);
         $settingsService->set('alliance_combat_system_on', 0);
@@ -1338,7 +1339,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
 
         // Mission should still be type 1 (not converted to ACS Attack)
         $mission->refresh();
-        $this->assertEquals(1, $mission->mission_type, 'Mission should remain type 1 when union creation is blocked by ACS setting.');
+        $this->assertEquals(FleetMissionType::Attack, $mission->mission_type, 'Mission should remain type 1 when union creation is blocked by ACS setting.');
     }
 
     /**
@@ -1375,7 +1376,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         $this->dispatchFleet($this->targetPlanet->getPlanetCoordinates(), $unitCollection, new Resources(0, 0, 0, 0), PlanetType::Planet);
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $mission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $mission->id,
@@ -1448,7 +1449,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union and invite ally.
         $this->post('/ajax/fleet/union/create', [
@@ -1555,7 +1556,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $initiatorMission->id,
@@ -1649,7 +1650,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $initiatorMission->id,
@@ -1745,7 +1746,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $initiatorMission->id,
@@ -1841,7 +1842,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->post('/ajax/fleet/union/create', [
             'fleetID' => $initiatorMission->id,
@@ -1940,7 +1941,7 @@ class FleetDispatchAcsAttackTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class);
-        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $initiatorMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Create union
         $this->post('/ajax/fleet/union/create', [

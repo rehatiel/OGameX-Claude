@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\Models\Enums\PlanetType;
 use OGame\Models\FleetMission;
@@ -679,7 +680,7 @@ class PlanetMoveTest extends AccountTestCase
         $attackMission->system_to = $originalCoordinates->system;
         $attackMission->position_to = $originalCoordinates->position;
         $attackMission->type_to = PlanetType::Planet->value;
-        $attackMission->mission_type = 1; // Attack
+        $attackMission->mission_type = FleetMissionType::Attack;
         $attackMission->time_departure = $now;
         $attackMission->time_arrival = $now + 7200; // Arrives in 2 hours
         $attackMission->metal = 0;

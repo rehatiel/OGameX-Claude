@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Exception;
 use OGame\Enums\CharacterClass;
+use OGame\Enums\FleetMissionType;
 use OGame\GameMissions\Models\ExpeditionOutcomeType;
 use OGame\Models\Resources;
 use OGame\Services\SettingsService;
@@ -103,7 +104,7 @@ class ExpeditionDiscovererCombatReductionTest extends FleetDispatchTestCase
 
         $discovererMission = new \OGame\Models\FleetMission();
         $discovererMission->user_id = $user->id;
-        $discovererMission->mission_type = 15;
+        $discovererMission->mission_type = FleetMissionType::Expedition;
         $discovererMission->save();
 
         // Run outcome selection many times and count combat encounters
@@ -131,7 +132,7 @@ class ExpeditionDiscovererCombatReductionTest extends FleetDispatchTestCase
 
         $collectorMission = new \OGame\Models\FleetMission();
         $collectorMission->user_id = $user->id;
-        $collectorMission->mission_type = 15;
+        $collectorMission->mission_type = FleetMissionType::Expedition;
         $collectorMission->save();
 
         $collectorCombatCount = 0;
@@ -215,7 +216,7 @@ class ExpeditionDiscovererCombatReductionTest extends FleetDispatchTestCase
         // Create a test mission
         $mission = new \OGame\Models\FleetMission();
         $mission->user_id = $user->id;
-        $mission->mission_type = 15;
+        $mission->mission_type = FleetMissionType::Expedition;
         $mission->save();
 
         // Run outcome selection many times

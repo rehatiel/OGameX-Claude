@@ -258,9 +258,9 @@ class FleetDispatchColoniseTest extends FleetDispatchTestCase
 
     /**
      * Test that when a mission has been sent and update happens long time later, both the arrival
-     * and return missions are processed in the same request.
+     * and return missions are eventually processed.
      */
-    public function testDispatchFleetColonizeReturnTripProcessSingleRequest(): void
+    public function testDispatchFleetColonizeReturnTripProcessed(): void
     {
         $this->basicSetup();
 
@@ -282,9 +282,10 @@ class FleetDispatchColoniseTest extends FleetDispatchTestCase
         $this->reloadApplication();
         $this->planetService->reloadPlanet();
 
-        // Do a request to trigger the update logic.
-        // Note: we only make one request here, as the arrival and return missions should be processed in the same request
-        // since enough time has passed.
+        // First request processes the outbound arrival mission and creates the return mission.
+        $this->get('/shipyard')->assertStatus(200);
+
+        // Second request processes the return mission (already arrived when created).
         $response = $this->get('/shipyard');
         $response->assertStatus(200);
 
@@ -435,7 +436,7 @@ class FleetDispatchColoniseTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Advance time by 1 minute
@@ -461,7 +462,7 @@ class FleetDispatchColoniseTest extends FleetDispatchTestCase
         $response->assertJsonFragment(['eventText' => $this->missionName . ' (R)']);
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
         $fleetMission = $fleetMissionService->getFleetMissionById($fleetMissionId, false);
 

@@ -259,7 +259,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Get time it takes for the fleet to travel to the second planet.
@@ -319,7 +319,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Cancel the fleet mission, so it doesn't interfere with other tests.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionService->cancelMission($fleetMission);
     }
 
@@ -345,7 +345,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Advance time by 5 seconds.
@@ -371,7 +371,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
         $response->assertJsonFragment(['eventText' => $this->missionName . ' (R)']);
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
         $fleetMission = $fleetMissionService->getFleetMissionById($fleetMissionId, false);
 
@@ -419,7 +419,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Get just dispatched fleet mission ID from database.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionId = $fleetMission->id;
 
         // Advance time by 5 seconds
@@ -481,7 +481,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Cancel the fleet mission, so it doesn't interfere with other tests.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionService->cancelMission($fleetMission);
     }
 
@@ -519,7 +519,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Get the fleet mission and verify it contains 5 probes (the saved amount)
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->assertNotNull($fleetMission, 'Fleet mission was not created');
         $this->assertEquals(5, $fleetMission->espionage_probe, 'Fleet mission should contain 5 espionage probes (the saved preference)');
@@ -562,7 +562,7 @@ class FleetDispatchEspionageTest extends FleetDispatchTestCase
 
         // Get the fleet mission and verify it contains 1 probe (the default)
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         $this->assertNotNull($fleetMission, 'Fleet mission was not created');
         $this->assertEquals(1, $fleetMission->espionage_probe, 'Fleet mission should contain 1 espionage probe (the default when no preference is set)');

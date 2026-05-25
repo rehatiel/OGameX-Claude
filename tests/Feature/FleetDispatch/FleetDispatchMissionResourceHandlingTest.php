@@ -108,7 +108,7 @@ class FleetDispatchMissionResourceHandlingTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($fleetMission, 'Fleet mission not created');
 
         // Travel to arrival
@@ -158,7 +158,7 @@ class FleetDispatchMissionResourceHandlingTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($fleetMission, 'Fleet mission not created');
 
         // Travel to arrival
@@ -199,7 +199,7 @@ class FleetDispatchMissionResourceHandlingTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($fleetMission, 'Fleet mission not created');
 
         // Travel to arrival
@@ -242,7 +242,7 @@ class FleetDispatchMissionResourceHandlingTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($fleetMission, 'Fleet mission not created');
 
         // Travel to arrival
@@ -304,7 +304,7 @@ class FleetDispatchMissionResourceHandlingTest extends FleetDispatchTestCase
         );
 
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $this->assertNotNull($fleetMission, 'Fleet mission not created');
 
         // For ACS Defend, time_arrival includes hold time

@@ -65,7 +65,7 @@ class PathfinderExpeditionDebrisHarvestTest extends FleetDispatchTestCase
 
         // Get the mission to calculate travel time
         $fleetMissionService = resolve(\OGame\Services\FleetMissionService::class, ['player' => $planet->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionDuration = $fleetMission->time_arrival - $fleetMission->time_departure;
 
         // Process the mission (arrival)
@@ -80,7 +80,7 @@ class PathfinderExpeditionDebrisHarvestTest extends FleetDispatchTestCase
         $this->assertLessThan($initialDebris, $remainingDebris, 'Pathfinders should have harvested some debris');
 
         // Process return mission
-        $returnMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $returnMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $returnDuration = $returnMission->time_arrival - $returnMission->time_departure;
         $this->travel($returnDuration + 1)->seconds();
         $this->get('/overview'); // Trigger return mission processing

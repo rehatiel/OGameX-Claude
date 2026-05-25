@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Exception;
 use OGame\Enums\CharacterClass;
+use OGame\Enums\FleetMissionType;
 use OGame\Models\User;
 use OGame\Services\CharacterClassService;
 use OGame\Services\DarkMatterService;
@@ -406,7 +407,7 @@ class CharacterClassServiceTest extends TestCase
         $mission->processed = 0;
         $mission->time_departure = time();
         $mission->time_arrival = time() + 3600;
-        $mission->mission_type = 3; // Transport
+        $mission->mission_type = FleetMissionType::Transport;
         $mission->save();
 
         // Attempt to change class should fail
@@ -441,7 +442,7 @@ class CharacterClassServiceTest extends TestCase
         $mission->processed = 1;
         $mission->time_departure = time() - 7200;
         $mission->time_arrival = time() - 3600;
-        $mission->mission_type = 3; // Transport
+        $mission->mission_type = FleetMissionType::Transport;
         $mission->save();
 
         // Processed fleets don't block - change should succeed
@@ -466,7 +467,7 @@ class CharacterClassServiceTest extends TestCase
         $mission->processed = 0;
         $mission->time_departure = time();
         $mission->time_arrival = time() + 3600;
-        $mission->mission_type = 3; // Transport
+        $mission->mission_type = FleetMissionType::Transport;
         $mission->save();
 
         // Attempt to deselect class should fail

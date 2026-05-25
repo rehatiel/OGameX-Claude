@@ -1024,7 +1024,7 @@ class FleetDispatchAcsDefendTest extends FleetDispatchTestCase
             $debugInfo[] = sprintf(
                 "ID=%d type=%d parent=%s proc=%d depart=%d now=%d bc=%d",
                 $activeMission->id,
-                $activeMission->mission_type,
+                $activeMission->mission_type->value,
                 $activeMission->parent_id ?? 'null',
                 $activeMission->processed,
                 $activeMission->time_departure,

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use OGame\Enums\FleetMissionType;
 use OGame\Models\FleetMission;
 use OGame\Services\AllianceDepotService;
 use Tests\UnitTestCase;
@@ -51,7 +52,7 @@ class AllianceDepotServiceTest extends UnitTestCase
 
         // Create outbound mission that arrived with 30 minutes (1800 seconds) hold time in GAME time
         $outbound = new FleetMission();
-        $outbound->mission_type = 5;
+        $outbound->mission_type = FleetMissionType::AcsDefend;
         $outbound->time_arrival = $currentTime - 900; // Arrived 15 minutes ago
         $outbound->time_holding = 1800; // 30 minutes hold time in game-time (less than 1 hour)
         $outbound->processed = 0;
@@ -59,7 +60,7 @@ class AllianceDepotServiceTest extends UnitTestCase
 
         // Create return mission departing in 15 minutes (with 200x speed multiplier: 1800/200 = 9 seconds real-world)
         $return = new FleetMission();
-        $return->mission_type = 5;
+        $return->mission_type = FleetMissionType::AcsDefend;
         $return->time_departure = $currentTime + 9; // Departs in 9 seconds (1800 game-time / 200 speed)
         $return->time_arrival = $currentTime + 1000; // Some future time
         $return->canceled = 0;
@@ -102,14 +103,14 @@ class AllianceDepotServiceTest extends UnitTestCase
 
         // Create outbound mission that hasn't arrived yet
         $outbound = new FleetMission();
-        $outbound->mission_type = 5;
+        $outbound->mission_type = FleetMissionType::AcsDefend;
         $outbound->time_arrival = $currentTime + 3600; // Arrives in 1 hour
         $outbound->processed = 0;
         $outbound->canceled = 0;
 
         // Create return mission
         $return = new FleetMission();
-        $return->mission_type = 5;
+        $return->mission_type = FleetMissionType::AcsDefend;
         $return->time_departure = $currentTime + 7200;
         $return->time_arrival = $currentTime + 10800;
         $return->canceled = 0;
@@ -128,14 +129,14 @@ class AllianceDepotServiceTest extends UnitTestCase
 
         // Create outbound mission that arrived
         $outbound = new FleetMission();
-        $outbound->mission_type = 5;
+        $outbound->mission_type = FleetMissionType::AcsDefend;
         $outbound->time_arrival = $currentTime - 7200; // Arrived 2 hours ago
         $outbound->processed = 0;
         $outbound->canceled = 0;
 
         // Create return mission that already departed
         $return = new FleetMission();
-        $return->mission_type = 5;
+        $return->mission_type = FleetMissionType::AcsDefend;
         $return->time_departure = $currentTime - 1800; // Departed 30 minutes ago
         $return->time_arrival = $currentTime + 1800;
         $return->canceled = 0;

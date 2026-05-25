@@ -224,7 +224,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time for attack to arrive (defend fleet should still be holding)
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -292,7 +292,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time for attack to arrive
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -380,7 +380,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time for attack to arrive - battle occurs, outbound mission unit counts updated
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -472,7 +472,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time to attack arrival - battle occurs during ACS defend hold time
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -573,7 +573,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance to attack arrival - battle occurs during ACS defend hold time
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -679,7 +679,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time for attack to arrive
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));
@@ -812,7 +812,7 @@ class FleetDispatchMultiDefenderBattleTest extends FleetDispatchTestCase
         );
 
         $attackerFleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $attackMission = $attackerFleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time for attack to arrive
         $this->travelTo(Date::createFromTimestamp($attackMission->time_arrival + 10));

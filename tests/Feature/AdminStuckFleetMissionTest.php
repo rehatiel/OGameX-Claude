@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlayerServiceFactory;
 use OGame\Models\Enums\PlanetType;
 use OGame\Models\FleetMission;
@@ -206,7 +207,7 @@ class AdminStuckFleetMissionTest extends AccountTestCase
         $mission->position_to = isset($attributes['position_to']) ? (int) $attributes['position_to'] : 1;
         $mission->type_from = isset($attributes['type_from']) ? (int) $attributes['type_from'] : PlanetType::Planet->value;
         $mission->type_to = isset($attributes['type_to']) ? (int) $attributes['type_to'] : PlanetType::Planet->value;
-        $mission->mission_type = isset($attributes['mission_type']) ? (int) $attributes['mission_type'] : 3;
+        $mission->mission_type = isset($attributes['mission_type']) ? FleetMissionType::from((int) $attributes['mission_type']) : FleetMissionType::Transport;
         $mission->time_departure = isset($attributes['time_departure']) ? (int) $attributes['time_departure'] : (int) Date::now()->subMinutes(10)->timestamp;
         $mission->time_arrival = isset($attributes['time_arrival']) ? (int) $attributes['time_arrival'] : (int) Date::now()->subMinutes(5)->timestamp;
         $mission->processed = isset($attributes['processed']) ? (int) $attributes['processed'] : 0;

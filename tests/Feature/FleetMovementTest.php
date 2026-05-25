@@ -185,7 +185,7 @@ class FleetMovementTest extends FleetDispatchTestCase
 
         // Get fleet mission ID
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Advance time by 1 minute
         $this->travel(1)->minutes();

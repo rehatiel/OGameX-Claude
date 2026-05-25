@@ -206,7 +206,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Cancel the fleet mission, so it doesn't interfere with other tests.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $fleetMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
         $fleetMissionService->cancelMission($fleetMission);
     }
 
@@ -226,7 +226,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the fleet mission
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $parentMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $parentMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Record when the mission departed
         $departureTime = (int)$parentMission->time_departure;
@@ -344,7 +344,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the parent mission.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $parentMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $parentMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Verify the parent mission has holding time set (expeditions should have at least 1 hour).
         $this->assertGreaterThan(0, $parentMission->time_holding, 'Expedition mission should have holding time set');
@@ -419,7 +419,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the mission ID.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Wait for the mission to complete.
         $this->travel(10)->hours();
@@ -475,7 +475,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the mission ID.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Wait for the mission to complete.
         $this->travel(10)->hours();
@@ -525,7 +525,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the mission ID.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Wait for the mission to complete.
         $this->travel(10)->hours();
@@ -540,6 +540,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
         // Get the return trip mission for the original mission
         // and assert that total resources is less than 100k (limited by low player points)
         $returnTripMission = $fleetMissionService->getFleetMissionByParentId($originalMission->id, false);
+        $this->assertNotNull($returnTripMission, 'Return trip mission should have been created by expedition processing');
         $totalResources = $returnTripMission->metal + $returnTripMission->crystal + $returnTripMission->deuterium;
         $this->assertLessThan(
             100000,
@@ -634,7 +635,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the mission ID.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Wait for the mission to complete.
         $this->travel(10)->hours();
@@ -671,7 +672,7 @@ class FleetDispatchExpeditionTest extends FleetDispatchTestCase
 
         // Get the mission ID.
         $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this->planetService->getPlayer()]);
-        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->first();
+        $originalMission = $fleetMissionService->getActiveFleetMissionsForCurrentPlayer()->sortByDesc('id')->values()->first();
 
         // Wait for the mission to complete.
         $this->travel(10)->hours();
