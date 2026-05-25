@@ -1000,6 +1000,10 @@ class PlanetService
         // Apply character class research time multiplier (Discoverer: -25%)
         $characterClassService = app(CharacterClassService::class);
         $timeMultiplier = $characterClassService->getResearchTimeMultiplier($this->player->getUser());
+        // Apply Technocrat officer research time multiplier (-25%, multiplicative)
+        if ($this->player->hasTechnocrat()) {
+            $timeMultiplier *= 0.75;
+        }
         if ($timeMultiplier != 1.0) {
             $time_seconds = (int)($time_seconds * $timeMultiplier);
         }

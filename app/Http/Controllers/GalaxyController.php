@@ -731,7 +731,7 @@ class GalaxyController extends OGameController
                 'galaxy' => $galaxy,
                 'system' => $system,
                 'galaxyContent' => $galaxyContent,
-                'hasAdmiral' => false,
+                'hasAdmiral' => $player->hasAdmiral(),
                 'hasBirthdayPlanet' => false,
                 'isOutlaw' => false,
                 'maximumFleetSlots' => 13,

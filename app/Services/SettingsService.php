@@ -224,6 +224,21 @@ class SettingsService
         return (int)$this->get('dark_matter_bonus', 8000);
     }
 
+    public function officerCost(): int
+    {
+        return (int)$this->get('officer_cost', 8000);
+    }
+
+    public function officerDurationDays(): int
+    {
+        return (int)$this->get('officer_duration_days', 30);
+    }
+
+    public function commandingStaffCost(): int
+    {
+        return (int)$this->get('commanding_staff_cost_per_week', 42500);
+    }
+
     /**
      * Returns the status of the Alliance Combat System.
      *

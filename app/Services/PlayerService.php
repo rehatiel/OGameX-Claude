@@ -577,7 +577,10 @@ class PlayerService
         $user = $this->getUser();
         $fleet_slots_bonus = $characterClassService->getAdditionalFleetSlots($user);
 
-        return $fleet_slots_from_research + $fleet_slots_bonus;
+        // Admiral officer: +2 fleet slots
+        $admiral_bonus = $this->hasAdmiral() ? 2 : 0;
+
+        return $fleet_slots_from_research + $fleet_slots_bonus + $admiral_bonus;
     }
 
     /**
@@ -622,7 +625,10 @@ class PlayerService
         $user = $this->getUser();
         $expedition_slots_bonus = $characterClassService->getExpeditionSlotsBonus($user);
 
-        return $expedition_slots_from_research + $bonus_slots + $expedition_slots_bonus;
+        // Admiral officer: +1 expedition slot
+        $admiral_bonus = $this->hasAdmiral() ? 1 : 0;
+
+        return $expedition_slots_from_research + $bonus_slots + $expedition_slots_bonus + $admiral_bonus;
     }
 
     /**
@@ -894,32 +900,27 @@ class PlayerService
 
     public function hasCommander(): bool
     {
-        // TODO: add logic
-        return false;
+        return ($this->user->officer_commander ?? 0) > time();
     }
 
     public function hasAdmiral(): bool
     {
-        // TODO: add logic
-        return false;
+        return ($this->user->officer_admiral ?? 0) > time();
     }
 
     public function hasEngineer(): bool
     {
-        // TODO: add logic
-        return false;
+        return ($this->user->officer_engineer ?? 0) > time();
     }
 
     public function hasGeologist(): bool
     {
-        // TODO: add logic
-        return false;
+        return ($this->user->officer_geologist ?? 0) > time();
     }
 
     public function hasTechnocrat(): bool
     {
-        // TODO: add logic
-        return false;
+        return ($this->user->officer_technocrat ?? 0) > time();
     }
 
     public function hasCommandingStaff(): bool

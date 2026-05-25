@@ -42,6 +42,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int|null $planet_current
  * @property int $dark_matter
  * @property Carbon|null $dark_matter_last_regen
+ * @property int $officer_commander
+ * @property int $officer_admiral
+ * @property int $officer_engineer
+ * @property int $officer_geologist
+ * @property int $officer_technocrat
  * @property bool $vacation_mode
  * @property Carbon|null $vacation_mode_activated_at
  * @property Carbon|null $vacation_mode_until
@@ -140,6 +145,11 @@ class User extends Authenticatable
         'character_class_free_used' => 'boolean',
         'character_class_changed_at' => 'datetime',
         'alliance_left_at' => 'datetime',
+        'officer_commander' => 'integer',
+        'officer_admiral' => 'integer',
+        'officer_engineer' => 'integer',
+        'officer_geologist' => 'integer',
+        'officer_technocrat' => 'integer',
     ];
 
     /**

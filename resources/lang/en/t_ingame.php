@@ -1336,6 +1336,9 @@ return [
         'benefit_mines'              => '+2% mine production',
         'benefit_espionage_title'    => '1 level will be added to your espionage research.',
         'benefit_espionage'          => '+1 espionage levels',
+        'not_enough_dark_matter'     => 'Not enough Dark Matter.',
+        'purchase_failed'            => 'Purchase failed. Please try again.',
+        'officer_hired'              => ':officer hired successfully.',
     ],
 
     // ── Shop ────────────────────────────────────────────────────────────────
