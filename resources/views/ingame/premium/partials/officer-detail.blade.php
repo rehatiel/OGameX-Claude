@@ -59,8 +59,7 @@
             </p>
         @endif
 
-        @if (!$isActive || true)
-            {{-- Always allow extending --}}
+        @if ($canBuy)
             <form method="POST" action="{{ route('premium.buy-officer') }}">
                 @csrf
                 <input type="hidden" name="officer_type" value="{{ $type }}">

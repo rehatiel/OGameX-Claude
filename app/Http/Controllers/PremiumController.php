@@ -15,6 +15,7 @@ use OGame\Services\SettingsService;
 class PremiumController extends OGameController
 {
     private const OFFICER_MAP = [
+        1  => ['column' => null,                 'label' => 'Dark Matter'],
         2  => ['column' => 'officer_commander',  'label' => 'Commander'],
         3  => ['column' => 'officer_admiral',    'label' => 'Admiral'],
         4  => ['column' => 'officer_engineer',   'label' => 'Engineer'],
@@ -68,9 +69,10 @@ class PremiumController extends OGameController
         $user   = Auth::user();
         $now    = time();
         $info   = self::OFFICER_MAP[$type];
+        $canBuy = $type !== 1;
         $cost   = ($type === 12)
             ? $this->settingsService->commandingStaffCost()
-            : $this->settingsService->officerCost();
+            : ($canBuy ? $this->settingsService->officerCost() : 0);
 
         $column   = $info['column'];
         $expiry   = $column ? ($user->{$column} ?? 0) : 0;
@@ -98,6 +100,7 @@ class PremiumController extends OGameController
             'isActive'   => $isActive,
             'expiry'     => $expiry,
             'cost'       => $cost,
+            'canBuy'     => $canBuy,
             'darkMatter' => $user->dark_matter ?? 0,
         ]);
     }

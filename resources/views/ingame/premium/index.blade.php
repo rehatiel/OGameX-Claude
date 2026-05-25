@@ -42,7 +42,7 @@
                     <li class="on button" id="button1">
                         <div class="premium1">
                             <div class="officers100  darkMatter">
-                                <a tabindex="1" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_dark_matter') }}" class="detail_button tooltip js_hideTipOnMobile slideIn" ref="1">
+                                <a tabindex="1" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_dark_matter') }}" class="detail_button tooltip js_hideTipOnMobile slideIn" ref="1" data-type="1">
                         <span class="ecke">
                             <span class="level">
                                 {{ number_format($darkMatter, 0, ',', '.') }}
@@ -70,6 +70,7 @@
                                 <a tabindex="{{ $officer['id'] }}" href="javascript:void(0);"
                                    title="{{ __('t_ingame.premium.' . $officer['key']) }}"
                                    ref="{{ $officer['id'] }}"
+                                   data-type="{{ $officer['id'] }}"
                                    class="detail_button tooltip js_hideTipOnMobile slideIn">
                         <span class="ecke">
                             <span class="level">
@@ -96,7 +97,7 @@
                     <li class="{{ $bundleActive ? 'on' : '' }} button" id="button12">
                         <div class="premium">
                             <div class="officers100  allOfficers">
-                                <a tabindex="12" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_commanding_staff') }}" ref="12" class="detail_button tooltip js_hideTipOnMobile slideIn">
+                                <a tabindex="12" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_commanding_staff') }}" ref="12" data-type="12" class="detail_button tooltip js_hideTipOnMobile slideIn">
                         <span class="ecke">
                             <span class="level">
                                 <img src="/img/icons/aa2ad16d1e00956f7dc8af8be3ca52.gif" width="12" height="11">
