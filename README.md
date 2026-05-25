@@ -55,10 +55,7 @@ Disclaimer: this project is purely fan-based and does not contain any commercial
   - [a) Development: Install OGameX using Docker](#development)
   - [b) Production: Install OGameX using Docker](#production)
 - [8. Upgrade](#upgrade)
-- [9. Support](#support)
-- [10. Sponsorship](#sponsorship)
-- [11. License](#license)
-- [12. OGameX related projects](#related-projects)
+- [9. License](#license)
 
 ## <a name="screenshots"></a> 🖥️ 1. Example screenshots
 
@@ -207,49 +204,7 @@ By default, the first registered user is assigned the admin role which can see t
   $ php artisan ogamex:admin:remove-role {username}
   ```
 
-## <a name="support"></a> 📞 9. Support
-
-Did you encounter issues in this project? Please open a ticket on GitHub and we'll try to help you out as soon as possible.
-
-## <a name="sponsorship"></a> 💰 10. Sponsorship
-We thank the following parties for sponsoring this project:
-
-<table>
-  <tr>
-    <td align="center" width="200px">
-      <a href="https://www.jetbrains.com/">
-        <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="100" alt="JetBrains Logo">
-      </a>
-      <br>
-      <strong>JetBrains</strong>
-      <br>
-      Providing free open-source licenses for PhpStorm, WebStorm, and DataGrip.
-    </td>
-    <td align="center" width="200px">
-      <!-- Placeholder for future sponsor -->
-    </td>
-    <td align="center" width="200px">
-      <!-- Placeholder for future sponsor -->
-    </td>
-  </tr>
-</table>
-
-Interested in supporting OGameX? We welcome sponsorships of all sizes! Your support helps us maintain and improve this open-source project. Please get in touch with us via GitHub or Discord to discuss sponsorship opportunities.
-
-## <a name="license"></a> 📰 11. License
+## <a name="license"></a> 📰 9. License
 
 The OGameX Laravel source code is open-source software licensed under the MIT license. See the LICENSE file for more details. All rights and concepts related to OGame are owned by GameForge GmbH.
 
-## <a name="related-projects"></a> 🌍 12. OGameX related projects
-
-The following projects either host OGameX servers or are based on the OGameX core.
-
-*Note: these projects are maintained independently and are not affiliated with the OGameX project or its maintainers in any way.*
-
-| Project Name | Description | Link | Type |
-|-------------|-------------|------|------|
-| MWarfare | MWarfare is derived from the OGameX project, it takes the game forward using modern technology and game design to create a more realistic version of OGame that the community has long deserved. | https://mwarfare.com/ | Not Open Source
-| OGameX Combat Simulator | High-performance OGame combat simulator based on the OGameX Rust battle engine. Features a blazing fast Rust-powered WASM engine (~200x faster than PHP), client-side calculations that work offline, and accurate battle simulations based on OGameX formulas. | [GitHub](https://github.com/rbardtke/OgameX-Combat-Simulator) | Open Source (MIT) |
-| Space Rivals | Built on top of the OGameX core with many different customizations and features. | https://space-rivals.net | Not Open Source |
-
-Do you want your own OGameX-related project to be listed here? Create an issue in the [GitHub issues page](https://github.com/lanedirt/OGameX/issues) and provide details about your project.
