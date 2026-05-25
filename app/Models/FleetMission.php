@@ -103,6 +103,9 @@ use OGame\Enums\FleetMissionType;
  * @method static Builder<static>|FleetMission whereTimeHolding($value)
  * @property int|null $time_physical_arrival Actual fleet arrival time. For ACS Defend: = time_arrival - time_holding. For all others: = time_arrival.
  * @method static Builder<static>|FleetMission whereTimePhysicalArrival($value)
+ * @method static Builder<static>|FleetMission unprocessed()
+ * @method static Builder<static>|FleetMission ofType(FleetMissionType $type)
+ * @method static Builder<static>|FleetMission forPlanets(int[] $planetIds)
  * @mixin \Eloquent
  */
 class FleetMission extends Model
@@ -178,5 +181,41 @@ class FleetMission extends Model
     public function hasArrivalMessagesSent(): bool
     {
         return $this->processed_hold === 1;
+    }
+
+    /**
+     * Scope: missions not yet processed.
+     *
+     * @param Builder<FleetMission> $query
+     * @return Builder<FleetMission>
+     */
+    public function scopeUnprocessed(Builder $query): Builder
+    {
+        return $query->where('processed', 0);
+    }
+
+    /**
+     * Scope: missions of a specific type.
+     *
+     * @param Builder<FleetMission> $query
+     * @return Builder<FleetMission>
+     */
+    public function scopeOfType(Builder $query, FleetMissionType $type): Builder
+    {
+        return $query->where('mission_type', $type);
+    }
+
+    /**
+     * Scope: missions involving any of the given planet IDs (either as source or destination).
+     *
+     * @param Builder<FleetMission> $query
+     * @param int[] $planetIds
+     * @return Builder<FleetMission>
+     */
+    public function scopeForPlanets(Builder $query, array $planetIds): Builder
+    {
+        return $query->where(function (Builder $q) use ($planetIds) {
+            $q->whereIn('planet_id_from', $planetIds)->orWhereIn('planet_id_to', $planetIds);
+        });
     }
 }

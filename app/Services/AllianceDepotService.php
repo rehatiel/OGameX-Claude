@@ -157,7 +157,7 @@ class AllianceDepotService
     {
         return FleetMission::where('planet_id_from', $outboundMission->planet_id_to)
             ->where('planet_id_to', $outboundMission->planet_id_from)
-            ->where('mission_type', FleetMissionType::AcsDefend)
+            ->ofType(FleetMissionType::AcsDefend)
             ->where('time_departure', '>=', $outboundMission->time_arrival)
             ->where('canceled', 0)
             ->orderBy('time_departure', 'asc')
@@ -177,10 +177,10 @@ class AllianceDepotService
         // Get all ACS Defend missions that have physically arrived at the target
         // and are still holding (mission not yet processed)
         // Only get outbound missions (parent_id IS NULL), not return missions
-        $allMissions = FleetMission::where('mission_type', 5)
+        $allMissions = FleetMission::ofType(FleetMissionType::AcsDefend)
             ->where('planet_id_to', $planetId)
-            ->where('processed', 0) // Not yet processed
-            ->whereNull('parent_id') // Only outbound missions, not returns
+            ->unprocessed()
+            ->whereNull('parent_id')
             ->where('canceled', 0)
             ->get();
 

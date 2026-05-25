@@ -37,12 +37,12 @@ class FleetMissionProcessingService
         $currentTime = Date::now()->timestamp;
 
         return $this->model
-            ->where('processed', 0)
+            ->unprocessed()
             ->where(function ($query) use ($currentTime) {
                 $query->where('time_arrival', '<=', $currentTime)
                     ->orWhere(function ($query) use ($currentTime) {
                         // ACS Defend: include missions that have physically arrived but are still holding
-                        $query->where('mission_type', FleetMissionType::AcsDefend)
+                        $query->ofType(FleetMissionType::AcsDefend)
                             ->whereNull('parent_id')
                             ->whereNotNull('time_physical_arrival')
                             ->where('time_physical_arrival', '<=', $currentTime);
@@ -63,16 +63,13 @@ class FleetMissionProcessingService
         $currentTime = Date::now()->timestamp;
 
         $missions = $this->model
-            ->where(function ($query) use ($planetIds) {
-                $query->whereIn('planet_id_from', $planetIds)
-                    ->orWhereIn('planet_id_to', $planetIds);
-            })
-            ->where('processed', 0)
+            ->forPlanets($planetIds)
+            ->unprocessed()
             ->where(function ($query) use ($currentTime) {
                 $query->where('time_arrival', '<=', $currentTime)
                     ->orWhere(function ($query) use ($currentTime) {
                         // ACS Defend: include missions that have physically arrived but are still holding
-                        $query->where('mission_type', FleetMissionType::AcsDefend)
+                        $query->ofType(FleetMissionType::AcsDefend)
                             ->whereNull('parent_id')
                             ->whereNotNull('time_physical_arrival')
                             ->where('time_physical_arrival', '<=', $currentTime);

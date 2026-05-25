@@ -248,8 +248,7 @@ class FleetMissionService
         // Note: this only includes missions that the current player has sent themselves
         // so it does not include any incoming missions by other players (e.g. hostile attacks, espionage, transports etc.)
         // Canceled missions are automatically excluded because they have processed = 1
-        $query = $this->model->where('user_id', $this->player->getId())
-            ->where('processed', 0);
+        $query = $this->model->where('user_id', $this->player->getId())->unprocessed();
         return $query->orderBy('time_arrival')->get();
     }
 
@@ -334,7 +333,7 @@ class FleetMissionService
         return $this->model->whereIn('planet_id_to', $planetIds)
             ->where('user_id', '!=', $this->player->getId())
             ->whereIn('mission_type', [1, 2, 6, 9])
-            ->where('processed', 0)
+            ->unprocessed()
             ->exists();
     }
 
@@ -428,13 +427,7 @@ class FleetMissionService
      */
     public function getActiveMissionsByPlanetIds(array $planetIds): Collection
     {
-        return $this->model
-            ->where(function ($query) use ($planetIds) {
-                $query->whereIn('planet_id_from', $planetIds)
-                    ->orWhereIn('planet_id_to', $planetIds);
-            })
-            ->where('processed', 0)
-            ->get();
+        return $this->model->forPlanets($planetIds)->unprocessed()->get();
     }
 
     /**
@@ -447,14 +440,9 @@ class FleetMissionService
     public function getFleetMissionById(int $id, bool $only_active = true): FleetMission|null
     {
         if ($only_active) {
-            return $this->model
-                ->where('id', $id)
-                ->where('processed', 0)
-                ->first();
+            return $this->model->where('id', $id)->unprocessed()->first();
         } else {
-            return $this->model
-                ->where('id', $id)
-                ->first();
+            return $this->model->where('id', $id)->first();
         }
     }
 
@@ -468,14 +456,9 @@ class FleetMissionService
     public function getFleetMissionByParentId(int $parent_id, bool $only_active = true): FleetMission|null
     {
         if ($only_active) {
-            return $this->model
-                ->where('parent_id', $parent_id)
-                ->where('processed', 0)
-                ->first();
+            return $this->model->where('parent_id', $parent_id)->unprocessed()->first();
         } else {
-            return $this->model
-                ->where('parent_id', $parent_id)
-                ->first();
+            return $this->model->where('parent_id', $parent_id)->first();
         }
     }
 

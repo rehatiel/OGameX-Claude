@@ -24,7 +24,7 @@ class GameObjectPropertyDetails
      * @param int $totalValue
      * @param array<string,array<int, array<string, float|int|string>>|float|int> $breakdown
      */
-    public function __construct(public int $rawValue, public int $bonusValue, public int $totalValue, public array $breakdown = [])
+    public function __construct(public readonly int $rawValue, public readonly int $bonusValue, public readonly int $totalValue, public readonly array $breakdown = [])
     {
     }
 }

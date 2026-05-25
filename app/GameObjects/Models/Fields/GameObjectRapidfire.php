@@ -37,7 +37,7 @@ class GameObjectRapidfire
      * @param string $object_machine_name Unit that this rapidfire affects.
      * @param int $amount Amount of rapidfire.
      */
-    public function __construct(public string $object_machine_name, public int $amount)
+    public function __construct(public readonly string $object_machine_name, public readonly int $amount)
     {
     }
 }
