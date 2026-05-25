@@ -21,6 +21,7 @@ use OGame\Models\Resources;
 use OGame\Models\User;
 use OGame\Services\CharacterClassService;
 use OGame\Services\CoordinateDistanceCalculator;
+use OGame\Http\Requests\Fleet\FleetSendRequest;
 use OGame\Services\FleetMissionService;
 use OGame\Services\FleetMovementAssembler;
 use OGame\Services\FleetUnionService;
@@ -301,63 +302,34 @@ class FleetController extends OGameController
     /**
      * Handles the dispatch of a fleet.
      *
+     * @param FleetSendRequest $request
      * @param PlayerService $player
      * @param FleetMissionService $fleetMissionService
+     * @param FleetUnionService $fleetUnionService
      * @param SettingsService $settingsService
      * @param CharacterClassService $characterClassService
      * @return JsonResponse
      * @throws Exception
      */
-    public function dispatchSendFleet(PlayerService $player, FleetMissionService $fleetMissionService, FleetUnionService $fleetUnionService, SettingsService $settingsService, CharacterClassService $characterClassService): JsonResponse
+    public function dispatchSendFleet(FleetSendRequest $request, PlayerService $player, FleetMissionService $fleetMissionService, FleetUnionService $fleetUnionService, SettingsService $settingsService, CharacterClassService $characterClassService): JsonResponse
     {
-        $galaxy = (int)request()->input('galaxy');
-        $system = (int)request()->input('system');
-        $position = (int)request()->input('position');
-        $target_type = (int)request()->input('type');
+        $validated = $request->validated();
 
-        // Expected form data
-        /*
-         token: 91cf2833548771ba423894d1f3dddb3c
-         am202: 1
-         galaxy: 1
-         system: 1
-         position: 12
-         type: 1
-         metal: 0
-         crystal: 0
-         deuterium: 0
-         food: 0
-         prioMetal: 2
-         prioCrystal: 3
-         prioDeuterium: 4
-         prioFood: 1
-         mission: 3
-         speed: 10
-         retreatAfterDefenderRetreat: 0
-         lootFoodOnAttack: 0
-         union: 0
-         holdingtime: 0
-         */
+        $galaxy = (int)$validated['galaxy'];
+        $system = (int)$validated['system'];
+        $position = (int)$validated['position'];
+        $target_type = (int)$validated['type'];
 
-        // Get the current player's planet
         $planet = $player->planets->current();
-
-        // Create the target coordinate
         $target_coordinate = new Coordinate($galaxy, $system, $position);
 
-        // Get speed percent from the request.
-        $speed_percent = (float)request()->input('speed');
+        $speed_percent = (float)$validated['speed'];
+        $holding_hours = (int)($validated['holdingtime'] ?? 0);
+        $mission_type = (int)$validated['mission'];
 
-        // Holding hours is the amount of hours the fleet will wait at the target planet and/or how long expedition will last.
-        $holding_hours = (int)request()->input('holdingtime');
-
-        // Extract mission type from the request
-        $mission_type = (int)request()->input('mission');
-
-        // Extract resources from the request
-        $metal = (int)request()->input('metal');
-        $crystal = (int)request()->input('crystal');
-        $deuterium = (int)request()->input('deuterium');
+        $metal = (int)($validated['metal'] ?? 0);
+        $crystal = (int)($validated['crystal'] ?? 0);
+        $deuterium = (int)($validated['deuterium'] ?? 0);
 
         // Input validation
         // Speed is sent as 1-10 range (where 1 = 10%, 10 = 100%), in 0.5 increments (representing 5% steps).
@@ -375,14 +347,6 @@ class FleetController extends OGameController
         $coordinateError = $this->validateCoordinates($galaxy, $system, $position, $settingsService->numberOfGalaxies());
         if ($coordinateError !== null) {
             return $this->validationErrorResponse($coordinateError);
-        }
-
-        if ($metal < 0 || $crystal < 0 || $deuterium < 0) {
-            return $this->validationErrorResponse(__('Resource amounts cannot be negative.'));
-        }
-
-        if ($holding_hours < 0) {
-            return $this->validationErrorResponse(__('Holding time cannot be negative.'));
         }
 
         // Validate holdingtime for expedition missions (mission type 15)
@@ -403,7 +367,7 @@ class FleetController extends OGameController
         $planetType = PlanetType::from($target_type);
 
         // Check if this fleet should join an existing union and pre-validate timing
-        $unionId = (int)request()->input('union');
+        $unionId = (int)($validated['union'] ?? 0);
         $union = null;
         if ($unionId > 0) {
             $union = FleetUnion::find($unionId);
