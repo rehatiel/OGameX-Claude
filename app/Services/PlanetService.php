@@ -63,7 +63,7 @@ class PlanetService
      * @param int|null $planet_id
      *  If supplied the constructor will try to load the planet from the database.
      */
-    public function __construct(PlayerServiceFactory $playerServiceFactory, private SettingsService $settingsService, PlayerService|null $player = null, Planet|null $planet = null, int|null $planet_id = null)
+    public function __construct(PlayerServiceFactory $playerServiceFactory, private SettingsService $settingsService, private PlanetResourceProductionService $productionService, PlayerService|null $player = null, Planet|null $planet = null, int|null $planet_id = null)
     {
         // Load the planet object if a positive planet ID is given.
         // If no planet ID is given then planet context will not be available
@@ -1900,26 +1900,7 @@ class PlanetService
      */
     public function getPlanetBasicIncome(): Resources
     {
-        // Moons do not have mines and therefore also do not have basic income.
-        if ($this->isMoon()) {
-            return new Resources(0, 0, 0, 0);
-        }
-
-        // Players in vacation mode have zero basic income.
-        if ($this->getPlayer()->isInVacationMode()) {
-            return new Resources(0, 0, 0, 0);
-        }
-
-        $universe_resource_multiplier = $this->settingsService->economySpeed();
-
-        $baseIncome = new Resources(
-            $this->settingsService->basicIncomeMetal() * $universe_resource_multiplier,
-            $this->settingsService->basicIncomeCrystal() * $universe_resource_multiplier,
-            $this->settingsService->basicIncomeDeuterium() * $universe_resource_multiplier,
-            $this->settingsService->basicIncomeEnergy() * $universe_resource_multiplier
-        );
-
-        return $this->calculatePlanetBonuses($baseIncome);
+        return $this->productionService->getPlanetBasicIncome($this->planet, $this->getPlayer());
     }
 
     /**
@@ -1930,9 +1911,7 @@ class PlanetService
      */
     public function calculatePlanetBonuses(Resources $baseIncome): Resources
     {
-        // Calculate the planet position production bonuses.
-        $baseIncome = $this->calculatePlanetProductionBonuses($baseIncome);
-        return $baseIncome;
+        return $this->productionService->calculatePlanetBonuses($this->planet, $baseIncome);
     }
 
     /**
@@ -1943,20 +1922,7 @@ class PlanetService
      */
     public function calculatePlanetProductionBonuses(Resources $baseIncome): Resources
     {
-        $position = $this->planet->planet;
-
-        $bonus = $this->getProductionForPositionBonuses($position);
-
-        $metalMultiplier = $bonus['metal'];
-        $crystalMultiplier = $bonus['crystal'];
-        $deuteriumMultiplier = $bonus['deuterium'];
-
-        // Apply multipliers to the base income
-        $baseIncome->metal->set($baseIncome->metal->get() * $metalMultiplier);
-        $baseIncome->crystal->set($baseIncome->crystal->get() * $crystalMultiplier);
-        $baseIncome->deuterium->set($baseIncome->deuterium->get() * $deuteriumMultiplier);
-
-        return $baseIncome;
+        return $this->productionService->calculatePlanetProductionBonuses($this->planet, $baseIncome);
     }
 
     /**
@@ -1967,8 +1933,7 @@ class PlanetService
      */
     public function getProductionForPositionBonuses(int $position): array
     {
-        $bonuses = config('game.position_bonuses', []);
-        return $bonuses[$position] ?? ['metal' => 1, 'crystal' => 1, 'deuterium' => 1];
+        return $this->productionService->getProductionForPositionBonuses($position);
     }
 
     /**
@@ -2163,26 +2128,7 @@ class PlanetService
      */
     public function getResourceProductionFactor(): int
     {
-        // if no consumption, then there should be no impact to production factor
-        if (empty($this->energyConsumption()->get())) {
-            return 100;
-        }
-
-        // if there is consumption, but energy production is 0, then production factor = 0
-        if (empty($this->energyProduction()->get())) {
-            return 0;
-        }
-
-        $production_factor = floor($this->energyProduction()->get() / $this->energyConsumption()->get() * 100);
-
-        // Force min 0, max 100.
-        if ($production_factor > 100) {
-            $production_factor = 100;
-        } elseif ($production_factor < 0) {
-            $production_factor = 0;
-        }
-
-        return (int)$production_factor;
+        return $this->productionService->getResourceProductionFactor($this->planet);
     }
 
     /**
@@ -2192,13 +2138,7 @@ class PlanetService
      */
     public function energyProduction(): Resource
     {
-        $energy_production = $this->planet->energy_max;
-
-        if (empty($energy_production)) {
-            $energy_production = 0;
-        }
-
-        return new Resource((float)$energy_production);
+        return $this->productionService->energyProduction($this->planet);
     }
 
     /**
@@ -2208,9 +2148,7 @@ class PlanetService
      */
     public function energyConsumption(): Resource
     {
-        $energy_consumption = $this->planet->energy_used;
-
-        return new Resource((float)$energy_consumption);
+        return $this->productionService->energyConsumption($this->planet);
     }
 
     /**
