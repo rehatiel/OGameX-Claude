@@ -852,42 +852,27 @@ class PlayerService
      */
     public function delete(): void
     {
-        // Loop through all planets and delete all records associated with them.
-        foreach ($this->planets->all() as $planet) {
-            // Delete all queue items.
-            ResearchQueue::where('planet_id', $planet->getPlanetId())->delete();
-            BuildingQueue::where('planet_id', $planet->getPlanetId())->delete();
-            UnitQueue::where('planet_id', $planet->getPlanetId())->delete();
-            // Delete all fleet missions.
-            // Get all fleet missions for this planet then loop through them and delete them.
-            // TODO: this might be a performance bottleneck if there are many missions. Consider using a bulk delete compatible
-            // with the foreign key constraints instead.
-            $missions = FleetMission::where('planet_id_from', $planet->getPlanetId())->orWhere('planet_id_to', $planet->getPlanetId())->get();
-            foreach ($missions as $mission) {
-                // Delete any that have this mission as their parent.
-                FleetMission::where('parent_id', $mission->id)->delete();
-                // Delete mission itself.
-                $mission->delete();
-            }
-        }
+        $planetIds = array_map(fn($p) => $p->getPlanetId(), $this->planets->all());
 
-        // Delete all messages.
+        ResearchQueue::whereIn('planet_id', $planetIds)->delete();
+        BuildingQueue::whereIn('planet_id', $planetIds)->delete();
+        UnitQueue::whereIn('planet_id', $planetIds)->delete();
+
+        $missionIds = FleetMission::whereIn('planet_id_from', $planetIds)
+            ->orWhereIn('planet_id_to', $planetIds)
+            ->pluck('id');
+
+        FleetMission::whereIn('parent_id', $missionIds)->delete();
+        FleetMission::whereIn('id', $missionIds)->delete();
+
         Message::where('user_id', $this->getId())->delete();
-
-        // Delete highscore record.
         Highscore::where('player_id', $this->getId())->delete();
-
-        // Delete tech record.
         UserTech::where('user_id', $this->getId())->delete();
 
-        // Clear planet_current reference before deleting planets (FK constraint).
         $this->user->planet_current = null;
         $this->user->save();
 
-        // Delete all planets.
         Planet::where('user_id', $this->getId())->delete();
-
-        // Delete the actual user.
         $this->user->delete();
     }
 

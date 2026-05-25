@@ -68,8 +68,14 @@ class ServerAdministrationController extends OGameController
 
             $groups = [];
 
+            $lastIpUserMap = DB::table('users')
+                ->select('id', 'last_ip')
+                ->whereIn('last_ip', $sharedLastIps)
+                ->get()
+                ->groupBy('last_ip');
+
             foreach ($sharedLastIps as $ip) {
-                $userIds = User::where('last_ip', $ip)->pluck('id')->toArray();
+                $userIds = $lastIpUserMap->get($ip, collect())->pluck('id')->toArray();
                 $groups[$ip] = [
                     'ip'             => $ip,
                     'type'           => 'Last active IP',
@@ -78,11 +84,17 @@ class ServerAdministrationController extends OGameController
                 ];
             }
 
+            $registerIpUserMap = DB::table('users')
+                ->select('id', 'register_ip')
+                ->whereIn('register_ip', $sharedRegisterIps)
+                ->get()
+                ->groupBy('register_ip');
+
             foreach ($sharedRegisterIps as $ip) {
                 if (isset($groups[$ip])) {
                     continue; // already captured via last_ip pass
                 }
-                $userIds = User::where('register_ip', $ip)->pluck('id')->toArray();
+                $userIds = $registerIpUserMap->get($ip, collect())->pluck('id')->toArray();
                 $groups[$ip] = [
                     'ip'             => $ip,
                     'type'           => 'Registration IP',

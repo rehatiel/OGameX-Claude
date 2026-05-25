@@ -321,28 +321,28 @@ class BuddiesController extends OGameController
         // Recent chat partners (players the user has chatted with recently, excluding buddies and alliance members)
         $buddyIds = $buddyList->pluck('id')->toArray();
         $allianceMemberIds = array_column($allianceMembers, 'id');
-        $recentPartners = ChatMessage::where(function ($q) use ($userId) {
+        $recentPartnerIds = ChatMessage::where(function ($q) use ($userId) {
             $q->where('sender_id', $userId)->orWhere('recipient_id', $userId);
         })
             ->whereNotNull('recipient_id')
             ->orderBy('created_at', 'desc')
             ->limit(100)
             ->get()
-            ->map(function ($msg) use ($userId) {
-                return $msg->sender_id === $userId ? $msg->recipient_id : $msg->sender_id;
-            })
+            ->map(fn ($msg) => $msg->sender_id === $userId ? $msg->recipient_id : $msg->sender_id)
             ->unique()
-            ->filter(function ($partnerId) use ($buddyIds, $allianceMemberIds) {
-                return !in_array($partnerId, $buddyIds) && !in_array($partnerId, $allianceMemberIds);
-            })
+            ->filter(fn ($partnerId) => !in_array($partnerId, $buddyIds) && !in_array($partnerId, $allianceMemberIds))
             ->take(20)
-            ->map(function ($partnerId) use ($user) {
-                $partner = User::find($partnerId);
+            ->values();
+
+        $partnerUsers = User::whereIn('id', $recentPartnerIds)->get()->keyBy('id');
+
+        $recentPartners = $recentPartnerIds
+            ->map(function ($partnerId) use ($user, $partnerUsers) {
+                $partner = $partnerUsers->get($partnerId);
                 if (!$partner) {
-                    return;
+                    return null;
                 }
 
-                // Only reveal online status for alliance members
                 $sameAlliance = $user && $user->alliance_id && $user->alliance_id === $partner->alliance_id;
 
                 return [
