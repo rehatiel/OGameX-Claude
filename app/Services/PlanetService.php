@@ -1967,20 +1967,8 @@ class PlanetService
      */
     public function getProductionForPositionBonuses(int $position): array
     {
-        // Define production bonuses by position
-        $productionBonuses = [
-            1 => ['metal' => 1, 'crystal' => 1.4, 'deuterium' => 1],
-            2 => ['metal' => 1, 'crystal' => 1.3, 'deuterium' => 1],
-            3 => ['metal' => 1, 'crystal' => 1.2, 'deuterium' => 1],
-            6 => ['metal' => 1.17, 'crystal' => 1, 'deuterium' => 1],
-            7 => ['metal' => 1.23, 'crystal' => 1, 'deuterium' => 1],
-            8 => ['metal' => 1.35, 'crystal' => 1, 'deuterium' => 1],
-            9 => ['metal' => 1.23, 'crystal' => 1, 'deuterium' => 1],
-            10 => ['metal' => 1.17, 'crystal' => 1, 'deuterium' => 1],
-        ];
-
-        // Return bonuses or default values
-        return $productionBonuses[$position] ?? ['metal' => 1, 'crystal' => 1, 'deuterium' => 1];
+        $bonuses = config('game.position_bonuses', []);
+        return $bonuses[$position] ?? ['metal' => 1, 'crystal' => 1, 'deuterium' => 1];
     }
 
     /**
