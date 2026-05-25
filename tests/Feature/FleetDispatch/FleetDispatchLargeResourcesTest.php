@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use OGame\GameObjects\Models\Units\UnitCollection;
 use OGame\Models\Resources;
 use OGame\Services\ObjectService;
+use OGame\Services\SettingsService;
 use Tests\FleetDispatchTestCase;
 
 /**
@@ -23,6 +24,13 @@ class FleetDispatchLargeResourcesTest extends FleetDispatchTestCase
      */
     protected function basicSetup(): void
     {
+        // Reset fleet speed settings so fuel consumption is predictable regardless of prior tests.
+        // Some test classes (e.g. ExpeditionDiscovererCombatReductionTest) set fleet_speed_peaceful=1
+        // which dramatically increases fuel consumption and exhausts the deuterium buffer.
+        $settingsService = resolve(SettingsService::class);
+        $settingsService->set('economy_speed', 8);
+        $settingsService->set('fleet_speed_peaceful', 10);
+
         // Add a large fleet with substantial cargo capacity
         // 10,000 Large Cargo ships = 250,000,000 total capacity
         $this->planetAddUnit('large_cargo', 10000);

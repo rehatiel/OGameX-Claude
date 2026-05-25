@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Support\Facades\DB;
 use OGame\Models\Planet;
 use OGame\Models\Planet\Coordinate;
 use OGame\Models\User;
@@ -74,30 +73,14 @@ class CoordinateDistanceCalculatorTest extends TestCase
         // Enable setting
         $this->settingsService->set('ignore_empty_systems_on', 1);
 
+        // Use a fixed high-system range in galaxy 9 that other tests don't occupy.
+        // Clear any existing planets in this range first to make the test DB-state-agnostic.
+        $galaxy = 9;
+        $startSystem = 488;
+        Planet::where('galaxy', $galaxy)->whereBetween('system', [$startSystem, $startSystem + 9])->delete();
+
         // Create a user
         $user = User::factory()->create();
-
-        // Find a starting system across all 9 galaxies where 10 consecutive systems are all empty,
-        // to avoid unique constraint violations with planets created by other tests.
-        $galaxy = null;
-        $startSystem = null;
-        for ($g = 1; $g <= 9 && $galaxy === null; $g++) {
-            for ($start = 1; $start <= 490; $start++) {
-                $existingCount = DB::table('planets')
-                    ->where('galaxy', $g)
-                    ->whereBetween('system', [$start, $start + 9])
-                    ->count();
-                if ($existingCount === 0) {
-                    $galaxy = $g;
-                    $startSystem = $start;
-                    break;
-                }
-            }
-        }
-
-        if ($galaxy === null || $startSystem === null) {
-            $this->fail('Could not find 10 consecutive empty systems in any galaxy for testing.');
-        }
 
         // Create planets in systems startSystem, startSystem+2, startSystem+4 (leaving others empty)
         $p1 = Planet::factory()->create(['user_id' => $user->id, 'galaxy' => $galaxy, 'system' => $startSystem, 'planet' => 1]);
