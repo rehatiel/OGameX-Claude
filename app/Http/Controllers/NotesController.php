@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use OGame\Http\Requests\Notes\AjaxCreateNoteRequest;
 use OGame\Services\NoteService;
 
 class NotesController extends OGameController
@@ -73,26 +74,13 @@ class NotesController extends OGameController
     /**
      * Create a new note
      *
-     * @param Request $request
+     * @param AjaxCreateNoteRequest $request
      * @param NoteService $noteService
      * @return JsonResponse
      */
-    public function ajaxCreate(Request $request, NoteService $noteService): JsonResponse
+    public function ajaxCreate(AjaxCreateNoteRequest $request, NoteService $noteService): JsonResponse
     {
-        $validated = $request->validate([
-            'id' => [
-                'nullable',
-                'integer',
-                function ($attribute, $value, $fail) use ($noteService) {
-                    if (!empty($value) && !$noteService->noteExistsAndBelongsToUser($value)) {
-                        $fail('The selected note ID does not exist.');
-                    }
-                },
-            ],
-            'noticePrio' => 'nullable|integer|min:1|max:3',
-            'noticeSubject' => 'nullable|string|max:32',
-            'noticeText' => 'nullable|string|max:5000',
-        ]);
+        $validated = $request->validated();
 
         $data = [
             'priority' => $validated['noticePrio'] ?? 2,

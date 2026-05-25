@@ -463,9 +463,9 @@ class FleetMissionService
      *
      * @param int $parent_id
      * @param bool $only_active
-     * @return FleetMission
+     * @return FleetMission|null
      */
-    public function getFleetMissionByParentId(int $parent_id, bool $only_active = true): ?FleetMission
+    public function getFleetMissionByParentId(int $parent_id, bool $only_active = true): FleetMission|null
     {
         if ($only_active) {
             return $this->model

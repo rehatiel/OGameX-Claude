@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OGame\Factories\PlanetServiceFactory;
+use OGame\Http\Requests\Phalanx\ScanRequest;
 use OGame\GameConstants\UniverseConstants;
 use OGame\Models\Planet\Coordinate;
 use OGame\Models\Resources;
@@ -17,30 +18,29 @@ class PhalanxController extends OGameController
     /**
      * Scan a planet using sensor phalanx.
      *
-     * @param Request $request
+     * @param ScanRequest $request
      * @param PlayerService $player
      * @param PlanetServiceFactory $planetServiceFactory
      * @param PhalanxService $phalanxService
      * @return JsonResponse
      * @throws Exception
      */
-    public function scan(Request $request, PlayerService $player, PlanetServiceFactory $planetServiceFactory, PhalanxService $phalanxService): JsonResponse
+    public function scan(ScanRequest $request, PlayerService $player, PlanetServiceFactory $planetServiceFactory, PhalanxService $phalanxService): JsonResponse
     {
-        // Validate request
-        $request->validate([
-            'galaxy' => 'required|integer|min:1',
-            'system' => 'required|integer|min:1|max:' . UniverseConstants::MAX_SYSTEM_COUNT,
-            'position' => 'required|integer|min:1|max:' . UniverseConstants::MAX_PLANET_POSITION,
-        ]);
+        $validated = $request->validated();
+
+        $galaxy   = (int) $validated['galaxy'];
+        $system   = (int) $validated['system'];
+        $position = (int) $validated['position'];
 
         // Create default response structure
         $response = [
             'success' => true,
             'server_time' => time(),
             'target' => [
-                'galaxy' => (int)$request->input('galaxy'),
-                'system' => (int)$request->input('system'),
-                'position' => (int)$request->input('position'),
+                'galaxy'      => $galaxy,
+                'system'      => $system,
+                'position'    => $position,
                 'planet_name' => '',
                 'player_name' => '',
             ],
@@ -65,11 +65,7 @@ class PhalanxController extends OGameController
         }
 
         // Create target coordinates
-        $target_coordinate = new Coordinate(
-            (int)$request->input('galaxy'),
-            (int)$request->input('system'),
-            (int)$request->input('position')
-        );
+        $target_coordinate = new Coordinate($galaxy, $system, $position);
 
         // Get moon coordinates
         $moon_coordinates = $current_planet->getPlanetCoordinates();

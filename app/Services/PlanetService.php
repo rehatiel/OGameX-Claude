@@ -332,7 +332,7 @@ class PlanetService
      */
     public function planetInitialized(): bool
     {
-        return $this->planet !== null;
+        return isset($this->planet);
     }
 
     /**

@@ -22,6 +22,7 @@ use OGame\Services\DebrisFieldService;
 use OGame\Services\PhalanxService;
 use OGame\Services\PlanetMoveService;
 use OGame\Services\PlanetService;
+use OGame\Http\Requests\Galaxy\MissileAttackRequest;
 use OGame\Services\PlayerService;
 use OGame\Services\SettingsService;
 
@@ -917,25 +918,17 @@ class GalaxyController extends OGameController
     /**
      * Handles missile attack submission.
      *
-     * @param Request $request
+     * @param MissileAttackRequest $request
      * @param PlayerService $player
      * @param PlanetServiceFactory $planetServiceFactory
      * @return JsonResponse
      */
-    public function missileAttack(Request $request, PlayerService $player, PlanetServiceFactory $planetServiceFactory): JsonResponse
+    public function missileAttack(MissileAttackRequest $request, PlayerService $player, PlanetServiceFactory $planetServiceFactory): JsonResponse
     {
         $this->playerService = $player;
         $this->planetServiceFactory = $planetServiceFactory;
 
-        // Validate input
-        $validated = $request->validate([
-            'galaxy' => 'required|integer|min:1',
-            'system' => 'required|integer|min:1',
-            'position' => 'required|integer|min:1|max:15',
-            'type' => 'required|integer',
-            'missile_count' => 'required|integer|min:0',
-            'target_priority' => 'required|integer|min:0|max:7',
-        ]);
+        $validated = $request->validated();
 
         $galaxy = $validated['galaxy'];
         $system = $validated['system'];

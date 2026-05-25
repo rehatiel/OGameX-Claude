@@ -112,7 +112,7 @@ class GameObjectProduction
     {
         $productionIndex = new ProductionIndex();
 
-        if ($this->planetService === null || $this->playerService === null) {
+        if (!isset($this->planetService, $this->playerService)) {
             return $productionIndex;
         }
 
