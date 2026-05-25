@@ -497,7 +497,7 @@ class PlayerService
     {
         // Check if user owns this planet ID.
         // Planet ID 0 is always valid as that will be updated to the first planet of the player.
-        if ($planet_id == 0) {
+        if ($planet_id === 0) {
             $this->user->planet_current = null;
             $this->user->save();
             return;

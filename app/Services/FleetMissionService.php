@@ -118,7 +118,7 @@ class FleetMissionService
         $diffPlanet = abs($fromCoordinate->position - $to->position);
 
         // If the galaxies are different
-        if ($diffGalaxy != 0) {
+        if ($diffGalaxy !== 0) {
             $diff2 = abs($diffGalaxy -  $this->settingsService->numberOfGalaxies());
 
             if ($diff2 < $diffGalaxy) {
@@ -129,7 +129,7 @@ class FleetMissionService
         }
 
         // If the system are different
-        if ($diffSystem != 0) {
+        if ($diffSystem !== 0) {
             $diff2 = abs($diffSystem - UniverseConstants::MAX_SYSTEM_COUNT);
             $deltaSystem = 0;
 
@@ -148,7 +148,7 @@ class FleetMissionService
         }
 
         // If the planet are different
-        if ($diffPlanet != 0) {
+        if ($diffPlanet !== 0) {
             return $diffPlanet * 5 + 1000;
         }
 

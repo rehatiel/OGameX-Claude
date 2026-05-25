@@ -53,12 +53,12 @@ class SettingsService
         // We do it here instead of in constructor so call to database
         // is only made when something on the page actually accesses
         // a settings value.
-        if (empty($this->settings)) {
+        if ($this->settings === []) {
             $this->loadFromDatabase();
         }
 
         // If it doesn't exist, return default.
-        if (empty($this->settings[$key])) {
+        if (!isset($this->settings[$key])) {
             return (string)$default;
         }
 
@@ -78,13 +78,13 @@ class SettingsService
         // We do it here instead of in constructor so call to database
         // is only made when something on the page actually accesses
         // a settings value.
-        if (empty($this->settings)) {
+        if ($this->settings === []) {
             $this->loadFromDatabase();
         }
 
         // Check if to be saved value is actually different from current one.
         $currentValue = $this->get($key, '');
-        if (!empty($currentValue) && $currentValue === $value) {
+        if ($currentValue !== '' && $currentValue === (string)$value) {
             // To be saved value is same as current value, skip update to prevent unnecessary db call.
             return;
         }

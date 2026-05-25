@@ -36,7 +36,7 @@ class PlanetAbandonController extends OGameController
         $planetName = request('newPlanetName');
 
         // Validate planet name
-        if ($player->planets->current()->isValidPlanetName($planetName) === false) {
+        if (!$player->planets->current()->isValidPlanetName($planetName)) {
             $errorText = $player->planets->current()->isMoon() ? __('t_ingame.planet_abandon.msg_invalid_moon_name') : __('t_ingame.planet_abandon.msg_invalid_planet_name');
 
             return response()->json([
