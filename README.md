@@ -34,13 +34,8 @@
 
 OGameX is an open-source OGame redesign clone. This clone is built fully from scratch using the Laravel 12.x framework and uses modern PHP practices. All major functionality is covered by unit and feature tests which automatically run on every build.
 
-We welcome any and all contributions to this project! If you want to help out, please read the [contributing](#contributing) section. If you have any questions you can [join the OGameX discord](https://discord.com/invite/HJ4QRxxB5N) to get in touch with the maintainers and other contributors.
-
 Disclaimer: this project is purely fan-based and does not contain any commercial features. All backend code is written from scratch. The rights and concepts for the artwork and frontend belong to the original creators: GameForge GmbH. Support them by checking out the official version: https://ogame.org.
 
-## 🖥️ Live demo
-- Main branch (nightly builds): [https://main.ogamex.dev](https://main.ogamex.dev)
-- Latest stable release **(0.14.0)**: [https://release.ogamex.dev](https://release.ogamex.dev)
 
 ## 📝 Table of Contents
 - [1. Example screenshots](#screenshots)
@@ -68,15 +63,8 @@ Disclaimer: this project is purely fan-based and does not contain any commercial
 <img width="1132" alt="Screenshot 2024-10-06 at 15 42 44" src="https://github.com/user-attachments/assets/cb112ca3-73d5-42ba-98f1-be844533be41">
 <img width="1147" alt="Screenshot 2024-10-06 at 15 43 18" src="https://github.com/user-attachments/assets/d90a0651-c841-4f3a-a119-8abde4c45b90">
 
-## <a name="author"></a> ✨ 2. About the author
 
-My ([@lanedirt](https://github.com/lanedirt)) journey into software development began in 2007 at the age of 14 when I discovered the source code for Ugamela, an early open-source PHP clone of OGame. I really liked running my own browser game server and dedicated myself to modifying this version and translating it to Dutch, leading to the launch of OGameX.nl. This server, active from 2007 to 2009, nurtured a small yet engaged community. This experience not only sparked my passion for software development but also laid the groundwork for my professional career. OGame has always held a special place in my heart, which is why now, 15 years later, I've decided to return to it and create this open-source clone from the ground up.
-
-## <a name="goal"></a> ✨ 3. Goal
-
-The primary goal of this fan-based project is to engineer a faithful rendition of OGame, specifically reflecting its state prior to the Lifeforms update introduced in 2022. This initiative, purely fan-based and non-commercial, is pursued strictly for educational purposes.
-
-## <a name="roadmap"></a> 🖥️ 4. Roadmap
+## <a name="roadmap"></a> 🖥️ 2. Roadmap
 
 OGameX is under active development with a lot of core features already implemented and working:
 
@@ -105,15 +93,6 @@ The next major upcoming features that are being worked on:
 - General bugfixes and stability improvements
 - More admin / server management features
 
-## <a name="contributing"></a> 🚀 5. Contributing
-
-Contributions are warmly welcomed, whether in development, testing, or spreading the word. Feel free to submit pull requests or contact me for any other contributions.
-
-A good starting point are issues labeled as "good first issue".
-
-[![good first issues open](https://img.shields.io/github/issues/lanedirt/OGameX/good%20first%20issue.svg?logo=github)](https://github.com/lanedirt/OGameX/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue")
-
-Read the [CONTRIBUTING.md](https://github.com/lanedirt/OGameX/blob/main/CONTRIBUTING.md) file for more information.
 
 ## <a name="disclaimer"></a> 📓 6. Disclaimer
 
