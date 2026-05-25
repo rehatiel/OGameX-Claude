@@ -1,5 +1,11 @@
 <div align="center">
 
+> **Note:** This is a heavily modified fork of [OGameX](https://github.com/lanedirt/OGameX) developed with [Claude Code](https://claude.ai/code). Significant features and refactors in this fork were implemented via AI-assisted development using Anthropic's Claude.
+
+</div>
+
+<div align="center">
+
 🌟 **If you find this project useful, please consider giving it a star!** 🌟
 
 </div>
