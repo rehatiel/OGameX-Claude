@@ -149,13 +149,7 @@ abstract class GameMission
         // For ACS Defend, we need physical arrival time for return trip calculation.
         $originalArrivalTime = $mission->time_arrival;
         $physicalArrivalTime = $mission->time_physical_arrival ?? $mission->time_arrival;
-        $isAcsDefendInHoldTime = (
-            $mission->mission_type === FleetMissionType::AcsDefend
-            && $mission->time_holding !== null
-            && $mission->time_holding > 0
-            && $mission->time_physical_arrival !== null
-            && $mission->time_physical_arrival <= $currentTime
-        );
+        $isAcsDefendInHoldTime = $mission->isInHoldTime(Date::now());
         if ($mission->mission_type === FleetMissionType::AcsDefend && $mission->time_holding !== null) {
             $hasArrived = $physicalArrivalTime <= $currentTime;
             $originalArrivalTimeForAdjustment = $physicalArrivalTime;
@@ -623,7 +617,7 @@ abstract class GameMission
         // Find all ACS Defend fleets currently holding at this planet.
         // time_physical_arrival = when fleet physically arrived; time_arrival = when hold expires.
         $defendMissions = FleetMission::query()
-            ->where('mission_type', 5)
+            ->where('mission_type', FleetMissionType::AcsDefend)
             ->where('planet_id_to', $planet->getPlanetId())
             ->where('processed', 0)
             ->whereRaw('COALESCE(time_physical_arrival, time_arrival - COALESCE(time_holding, 0)) <= ?', [Date::now()->timestamp])

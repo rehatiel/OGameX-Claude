@@ -157,7 +157,7 @@ class AllianceDepotService
     {
         return FleetMission::where('planet_id_from', $outboundMission->planet_id_to)
             ->where('planet_id_to', $outboundMission->planet_id_from)
-            ->where('mission_type', 5)
+            ->where('mission_type', FleetMissionType::AcsDefend)
             ->where('time_departure', '>=', $outboundMission->time_arrival)
             ->where('canceled', 0)
             ->orderBy('time_departure', 'asc')

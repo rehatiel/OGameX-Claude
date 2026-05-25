@@ -285,7 +285,7 @@ class FleetMissionService
                     // Also include ACS Defend outbound missions that are processed but still in hold time
                     // (ACS Defend is marked processed=1 immediately at arrival, before hold time ends)
                     ->orWhere(function ($query) use ($currentTime) {
-                        $query->where('mission_type', 5)
+                        $query->where('mission_type', FleetMissionType::AcsDefend)
                             ->whereNull('parent_id')
                             ->where('processed', 1)
                             ->where('time_arrival', '<=', $currentTime)
@@ -539,13 +539,7 @@ class FleetMissionService
         // For ACS Defend, the fleet is in hold when: time_physical_arrival <= now < time_arrival
         // The processed flag may be set to 1 by AttackMission when the fleet is attacked during hold time,
         // so we must allow recall in that case too.
-        $isAcsDefendInHoldTime = (
-            $mission->mission_type === FleetMissionType::AcsDefend
-            && $mission->time_holding !== null
-            && $mission->time_holding > 0
-            && $mission->time_physical_arrival !== null
-            && $mission->time_physical_arrival <= Date::now()->timestamp
-        );
+        $isAcsDefendInHoldTime = $mission->isInHoldTime(Date::now());
 
         // Sanity check: only allow canceling missions that have not been processed yet.
         // Exception: ACS Defend missions can be recalled during hold time even if processed.
@@ -554,12 +548,11 @@ class FleetMissionService
         }
 
         // If an ACS Defend fleet is recalled during hold time and the arrival messages have not
-        // been sent yet (processed_hold == 0), send them now. The fleet did physically arrive
-        // at the destination even though it is being recalled, so both sender and host must be
-        // informed. Without this, a recall before the first page load since physical arrival
-        // would skip the messages entirely because cancel() sets processed=1, causing the
-        // query in getArrivedMissionsByPlanetIds() to exclude this mission permanently.
-        if ($isAcsDefendInHoldTime && $mission->processed_hold == 0) {
+        // been sent yet, send them now. The fleet did physically arrive at the destination even
+        // though it is being recalled, so both sender and host must be informed. Without this,
+        // a recall before the first page load since physical arrival would skip the messages
+        // entirely because cancel() sets processed=1, excluding this mission permanently.
+        if ($isAcsDefendInHoldTime && !$mission->hasArrivalMessagesSent()) {
             $this->processor->sendAcsDefendArrivalMessages($mission);
             $mission->processed_hold = 1;
             $mission->save();

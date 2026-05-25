@@ -388,7 +388,7 @@ class FleetController extends OGameController
         }
 
         $orders = [];
-        $possible_mission_types = [1, 2, 3, 4, 5, 6, 7, 8, 9, 15];
+        $possible_mission_types = array_column(FleetMissionType::cases(), 'value');
         foreach ($possible_mission_types as $mission) {
             if (in_array($mission, $enabledMissions, true)) {
                 $orders[$mission] = true;

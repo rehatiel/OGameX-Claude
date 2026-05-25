@@ -42,7 +42,7 @@ class FleetMissionProcessingService
                 $query->where('time_arrival', '<=', $currentTime)
                     ->orWhere(function ($query) use ($currentTime) {
                         // ACS Defend: include missions that have physically arrived but are still holding
-                        $query->where('mission_type', 5)
+                        $query->where('mission_type', FleetMissionType::AcsDefend)
                             ->whereNull('parent_id')
                             ->whereNotNull('time_physical_arrival')
                             ->where('time_physical_arrival', '<=', $currentTime);
@@ -72,7 +72,7 @@ class FleetMissionProcessingService
                 $query->where('time_arrival', '<=', $currentTime)
                     ->orWhere(function ($query) use ($currentTime) {
                         // ACS Defend: include missions that have physically arrived but are still holding
-                        $query->where('mission_type', 5)
+                        $query->where('mission_type', FleetMissionType::AcsDefend)
                             ->whereNull('parent_id')
                             ->whereNotNull('time_physical_arrival')
                             ->where('time_physical_arrival', '<=', $currentTime);
@@ -83,7 +83,7 @@ class FleetMissionProcessingService
         // Filter out missions whose full hold time hasn't elapsed yet
         return $missions->filter(function ($mission) use ($currentTime) {
             // ACS Defend outbound: process immediately when physically arrived (hold time handled separately)
-            if ($mission->mission_type === FleetMissionType::AcsDefend && $mission->parent_id === null) {
+            if ($mission->isAcsDefendOutbound()) {
                 return true;
             }
 
@@ -111,19 +111,20 @@ class FleetMissionProcessingService
         }
 
         $currentTime = Date::now()->timestamp;
-        $isAcsDefendOutbound = ($mission->mission_type === FleetMissionType::AcsDefend && $mission->parent_id === null);
 
         // ACS Defend: send physical-arrival messages once, at the moment the fleet arrives (before hold expires)
-        if ($isAcsDefendOutbound && $mission->time_physical_arrival !== null && $mission->processed_hold == 0) {
-            if ($mission->time_physical_arrival <= $currentTime) {
-                $mission->processed_hold = 1;
-                $mission->save();
-                $this->sendAcsDefendArrivalMessages($mission);
-            }
+        if ($mission->isAcsDefendOutbound()
+            && $mission->time_physical_arrival !== null
+            && $mission->time_physical_arrival <= $currentTime
+            && !$mission->hasArrivalMessagesSent()
+        ) {
+            $mission->processed_hold = 1;
+            $mission->save();
+            $this->sendAcsDefendArrivalMessages($mission);
         }
 
         // Determine full processing time (arrival + any hold period)
-        $holdTime = ($mission->time_holding !== null && !$isAcsDefendOutbound) ? $mission->time_holding : 0;
+        $holdTime = ($mission->time_holding !== null && !$mission->isAcsDefendOutbound()) ? $mission->time_holding : 0;
         if (($mission->time_arrival + $holdTime) > $currentTime) {
             return;
         }

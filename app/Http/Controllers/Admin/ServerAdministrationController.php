@@ -303,13 +303,13 @@ class ServerAdministrationController extends OGameController
             ->join('fleet_missions as fm_next', function ($join) use ($gapSeconds) {
                 $join->on('fm_next.user_id', '=', 'fm_return.user_id')
                     ->on('fm_next.planet_id_from', '=', 'fm_return.planet_id_to')
-                    ->where('fm_next.mission_type', '=', 15)
+                    ->where('fm_next.mission_type', '=', FleetMissionType::Expedition->value)
                     ->whereNull('fm_next.parent_id')
                     ->where('fm_next.canceled', '=', 0)
                     ->whereRaw('fm_next.time_departure > fm_return.time_arrival')
                     ->whereRaw('fm_next.time_departure - fm_return.time_arrival <= ?', [$gapSeconds]);
             })
-            ->where('fm_return.mission_type', 15)
+            ->where('fm_return.mission_type', FleetMissionType::Expedition->value)
             ->whereNotNull('fm_return.parent_id')
             ->where('fm_return.canceled', 0)
             ->where('fm_return.time_arrival', '>', $cutoff)

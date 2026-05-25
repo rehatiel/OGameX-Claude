@@ -148,4 +148,35 @@ class FleetMission extends Model
     {
         return $this->union_id !== null;
     }
+
+    /**
+     * True when this is an ACS Defend outbound leg (not a return mission).
+     * ACS Defend return trips have parent_id set; outbound legs do not.
+     */
+    public function isAcsDefendOutbound(): bool
+    {
+        return $this->mission_type === FleetMissionType::AcsDefend && $this->parent_id === null;
+    }
+
+    /**
+     * True when this ACS Defend fleet has physically arrived and is currently
+     * in its hold period (time_physical_arrival <= $now < time_arrival).
+     */
+    public function isInHoldTime(Carbon $now): bool
+    {
+        return $this->isAcsDefendOutbound()
+            && $this->time_holding !== null
+            && $this->time_holding > 0
+            && $this->time_physical_arrival !== null
+            && $this->time_physical_arrival <= $now->timestamp;
+    }
+
+    /**
+     * True when physical-arrival messages (fleet arrived at destination) have
+     * already been dispatched for this ACS Defend mission.
+     */
+    public function hasArrivalMessagesSent(): bool
+    {
+        return $this->processed_hold === 1;
+    }
 }
