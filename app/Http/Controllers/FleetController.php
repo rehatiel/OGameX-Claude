@@ -11,13 +11,11 @@ use OGame\Enums\FleetMissionType;
 use OGame\Factories\GameMissionFactory;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\GameConstants\UniverseConstants;
-use OGame\GameMessages\FleetUnionInvite as FleetUnionInviteMessage;
 use OGame\GameObjects\Models\Units\UnitCollection;
 use OGame\Models\Enums\PlanetType;
 use OGame\Models\FleetMission;
 use OGame\Models\FleetTemplate;
 use OGame\Models\FleetUnion;
-use OGame\Models\FleetUnionInvite;
 use OGame\Models\Planet\Coordinate;
 use OGame\Models\Resources;
 use OGame\Models\User;
@@ -25,7 +23,6 @@ use OGame\Services\CharacterClassService;
 use OGame\Services\CoordinateDistanceCalculator;
 use OGame\Services\FleetMissionService;
 use OGame\Services\FleetUnionService;
-use OGame\Services\MessageService;
 use OGame\Services\ObjectService;
 use OGame\Services\PlanetService;
 use OGame\Services\PlayerService;
@@ -804,7 +801,7 @@ class FleetController extends OGameController
      * @param FleetUnionService $fleetUnionService
      * @return JsonResponse
      */
-    public function createUnion(PlayerService $player, FleetUnionService $fleetUnionService, MessageService $messageService, SettingsService $settingsService): JsonResponse
+    public function createUnion(PlayerService $player, FleetUnionService $fleetUnionService, SettingsService $settingsService): JsonResponse
     {
         if (!$settingsService->allianceCombatSystemOn()) {
             return response()->json(['error' => __('ACS is disabled on this server.')], 403);
@@ -839,7 +836,7 @@ class FleetController extends OGameController
             $unionId = $mission->union_id;
 
             // Send invite messages to newly added users
-            $this->sendUnionInvites($validated['unionUsers'] ?? '', $player, $mission, (int) $unionId, 'KV' . $unionId, $messageService);
+            $fleetUnionService->sendUnionInvites($validated['unionUsers'] ?? '', $player, $mission, (int) $unionId, 'KV' . $unionId);
 
             // Return as text/plain so $.parseJSON() in unionEdit() works correctly
             return response()->json([
@@ -859,7 +856,7 @@ class FleetController extends OGameController
             $union = $fleetUnionService->createUnion($mission, $unionName);
 
             // Send invite messages to added users
-            $this->sendUnionInvites($validated['unionUsers'] ?? '', $player, $mission, (int) $union->id, 'KV' . $union->id, $messageService);
+            $fleetUnionService->sendUnionInvites($validated['unionUsers'] ?? '', $player, $mission, (int) $union->id, 'KV' . $union->id);
 
             // Response format expected by unionEdit() callback in movement.blade.php
             // Return as text/plain so $.parseJSON() in unionEdit() works correctly
@@ -882,114 +879,9 @@ class FleetController extends OGameController
         }
     }
 
-    /**
-     * Send union invite messages to the specified users and record invitations.
-     *
-     * @param string $unionUsersString Semicolon-separated usernames from the federation overlay form
-     * @param PlayerService $senderPlayer The player who created/edited the union
-     * @param FleetMission $mission The fleet mission associated with the union
-     * @param int $unionId The fleet union ID
-     * @param string $unionName The union display name (e.g. "KV123")
-     * @param MessageService $messageService
-     */
-    private function sendUnionInvites(string $unionUsersString, PlayerService $senderPlayer, FleetMission $mission, int $unionId, string $unionName, MessageService $messageService): void
-    {
-        if (empty($unionUsersString)) {
-            return;
-        }
-
-        $usernames = array_filter(explode(';', $unionUsersString));
-        $senderName = $senderPlayer->getUsername(false);
-        $targetCoords = $mission->galaxy_to . ':' . $mission->system_to . ':' . $mission->position_to;
-
-        // Resolve the target planet owner name
-        $targetPlayerName = '';
-        $planetServiceFactory = app(PlanetServiceFactory::class);
-        $targetCoordinate = new Coordinate($mission->galaxy_to, $mission->system_to, $mission->position_to);
-        $targetPlanetService = $planetServiceFactory->makeForCoordinate($targetCoordinate);
-        if ($targetPlanetService !== null) {
-            $targetPlayer = $targetPlanetService->getPlayer();
-            if ($targetPlayer !== null) {
-                $targetPlayerName = $targetPlayer->getUsername(false);
-            }
-        }
-
-        $arrivalTime = date('d.m.Y H:i:s', $mission->time_arrival);
-
-        foreach ($usernames as $username) {
-            $username = trim($username);
-
-            // Skip the sender's own name
-            if ($username === $senderName) {
-                continue;
-            }
-
-            /** @var User|null $invitedUser */
-            $invitedUser = User::where('username', $username)->first();
-            if ($invitedUser === null) {
-                continue;
-            }
-
-            // Create the invite record (skip if already invited)
-            FleetUnionInvite::firstOrCreate([
-                'fleet_union_id' => $unionId,
-                'user_id' => $invitedUser->id,
-            ]);
-
-            $invitedPlayerService = app(PlayerService::class, ['player_id' => $invitedUser->id]);
-            $messageService->sendSystemMessageToPlayer($invitedPlayerService, FleetUnionInviteMessage::class, [
-                'sender_name' => $senderName,
-                'union_name' => $unionName,
-                'target_player' => $targetPlayerName,
-                'target_coords' => $targetCoords,
-                'arrival_time' => $arrivalTime,
-            ]);
-        }
-    }
-
-    /**
-     * Get all active fleet unions the player can join.
-     *
-     * Returns unions where the player has been explicitly invited or is the creator,
-     * the union hasn't expired, and has active fleet missions.
-     *
-     * @param PlayerService $player
-     * @param FleetUnionService $fleetUnionService
-     * @return array<array{id: int, name: string, galaxy: int, system: int, position: int, planet_type: int, creator: string}>
-     */
     private function getAvailableUnionsForPlayer(PlayerService $player, FleetUnionService $fleetUnionService): array
     {
-        $playerId = $player->getId();
-
-        // Get unions where the player was invited or is the creator
-        $unions = FleetUnion::with(['creator'])
-            ->where('time_arrival', '>', now()->timestamp)
-            ->whereHas('activeFleetMissions', function ($query) {
-                $query->where('processed', 0)->where('canceled', 0);
-            })
-            ->where(function ($query) use ($playerId) {
-                $query->where('user_id', $playerId)
-                    ->orWhereHas('invites', function ($query) use ($playerId) {
-                        $query->where('user_id', $playerId);
-                    });
-            })
-            ->get();
-
-        $availableUnions = [];
-        foreach ($unions as $union) {
-            $availableUnions[] = [
-                'id' => $union->id,
-                'name' => $union->name ?? ('KV' . $union->id),
-                'galaxy' => $union->galaxy_to,
-                'system' => $union->system_to,
-                'position' => $union->position_to,
-                'planet_type' => $union->planet_type_to,
-                'creator' => $union->creator->username,
-                'time' => $union->time_arrival,
-            ];
-        }
-
-        return $availableUnions;
+        return $fleetUnionService->getAvailableUnionsForPlayer($player->getId());
     }
 
     /**
@@ -1058,39 +950,13 @@ class FleetController extends OGameController
             'planet_type' => 'required|integer|in:1,2',
         ]);
 
-        $playerId = $player->getId();
-
-        // Only return unions the player was explicitly invited to or created
-        $unions = FleetUnion::with(['creator', 'activeFleetMissions'])
-            ->where('galaxy_to', $validated['galaxy'])
-            ->where('system_to', $validated['system'])
-            ->where('position_to', $validated['position'])
-            ->where('planet_type_to', $validated['planet_type'])
-            ->where('time_arrival', '>', now()->timestamp)
-            ->whereHas('activeFleetMissions', function ($query) {
-                $query->where('processed', 0)->where('canceled', 0);
-            })
-            ->where(function ($query) use ($playerId) {
-                $query->where('user_id', $playerId)
-                    ->orWhereHas('invites', function ($query) use ($playerId) {
-                        $query->where('user_id', $playerId);
-                    });
-            })
-            ->get();
-
-        $availableUnions = [];
-
-        foreach ($unions as $union) {
-            $availableUnions[] = [
-                'id' => $union->id,
-                'name' => $union->name,
-                'creator' => $union->creator->username,
-                'time_arrival' => $union->time_arrival,
-                'participant_count' => $union->activeFleetMissions()->count(),
-                'max_fleets' => $union->max_fleets,
-                'can_join' => !$union->hasReachedMaxFleets(),
-            ];
-        }
+        $availableUnions = $fleetUnionService->getAvailableUnionsForCoordinate(
+            $player->getId(),
+            (int) $validated['galaxy'],
+            (int) $validated['system'],
+            (int) $validated['position'],
+            (int) $validated['planet_type']
+        );
 
         return response()->json([
             'unions' => $availableUnions,

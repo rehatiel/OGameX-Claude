@@ -4,8 +4,13 @@ namespace OGame\Services;
 
 use Exception;
 use OGame\Enums\FleetMissionType;
+use OGame\Factories\PlanetServiceFactory;
+use OGame\GameMessages\FleetUnionInvite as FleetUnionInviteMessage;
 use OGame\Models\FleetMission;
 use OGame\Models\FleetUnion;
+use OGame\Models\FleetUnionInvite;
+use OGame\Models\Planet\Coordinate;
+use OGame\Models\User;
 
 /**
  * Class FleetUnionService.
@@ -27,6 +32,8 @@ class FleetUnionService
     public function __construct(
         private readonly BuddyService $buddyService,
         private readonly AllianceService $allianceService,
+        private readonly PlanetServiceFactory $planetServiceFactory,
+        private readonly MessageService $messageService,
     ) {
     }
 
@@ -208,6 +215,143 @@ class FleetUnionService
         if ($newInitiator !== null && $union->user_id !== $newInitiator->user_id) {
             $union->user_id = $newInitiator->user_id;
             $union->save();
+        }
+    }
+
+    /**
+     * Get all active fleet unions a player can join (invited or creator, not expired, has active missions).
+     *
+     * @return array<array{id: int, name: string, galaxy: int, system: int, position: int, planet_type: int, creator: string, time: int}>
+     */
+    public function getAvailableUnionsForPlayer(int $playerId): array
+    {
+        $unions = FleetUnion::with(['creator'])
+            ->where('time_arrival', '>', now()->timestamp)
+            ->whereHas('activeFleetMissions', function ($query) {
+                $query->where('processed', 0)->where('canceled', 0);
+            })
+            ->where(function ($query) use ($playerId) {
+                $query->where('user_id', $playerId)
+                    ->orWhereHas('invites', function ($query) use ($playerId) {
+                        $query->where('user_id', $playerId);
+                    });
+            })
+            ->get();
+
+        $result = [];
+        foreach ($unions as $union) {
+            $result[] = [
+                'id' => $union->id,
+                'name' => $union->name ?? ('KV' . $union->id),
+                'galaxy' => $union->galaxy_to,
+                'system' => $union->system_to,
+                'position' => $union->position_to,
+                'planet_type' => $union->planet_type_to,
+                'creator' => $union->creator->username,
+                'time' => $union->time_arrival,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get active fleet unions targeting a specific coordinate that a player can join.
+     *
+     * @return array<array{id: int, name: string, creator: string, time_arrival: int, participant_count: int, max_fleets: int, can_join: bool}>
+     */
+    public function getAvailableUnionsForCoordinate(int $playerId, int $galaxy, int $system, int $position, int $planetType): array
+    {
+        $unions = FleetUnion::with(['creator', 'activeFleetMissions'])
+            ->where('galaxy_to', $galaxy)
+            ->where('system_to', $system)
+            ->where('position_to', $position)
+            ->where('planet_type_to', $planetType)
+            ->where('time_arrival', '>', now()->timestamp)
+            ->whereHas('activeFleetMissions', function ($query) {
+                $query->where('processed', 0)->where('canceled', 0);
+            })
+            ->where(function ($query) use ($playerId) {
+                $query->where('user_id', $playerId)
+                    ->orWhereHas('invites', function ($query) use ($playerId) {
+                        $query->where('user_id', $playerId);
+                    });
+            })
+            ->get();
+
+        $result = [];
+        foreach ($unions as $union) {
+            $result[] = [
+                'id' => $union->id,
+                'name' => $union->name,
+                'creator' => $union->creator->username,
+                'time_arrival' => $union->time_arrival,
+                'participant_count' => $union->activeFleetMissions()->count(),
+                'max_fleets' => $union->max_fleets,
+                'can_join' => !$union->hasReachedMaxFleets(),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Send ACS union invite messages to the named users and record invite records.
+     *
+     * @param string $unionUsersString Semicolon-separated usernames
+     * @param PlayerService $senderPlayer The player who created/edited the union
+     * @param FleetMission $mission The mission associated with the union
+     * @param int $unionId The fleet union ID
+     * @param string $unionName The union display name (e.g. "KV123")
+     */
+    public function sendUnionInvites(string $unionUsersString, PlayerService $senderPlayer, FleetMission $mission, int $unionId, string $unionName): void
+    {
+        if (empty($unionUsersString)) {
+            return;
+        }
+
+        $usernames = array_filter(explode(';', $unionUsersString));
+        $senderName = $senderPlayer->getUsername(false);
+        $targetCoords = $mission->galaxy_to . ':' . $mission->system_to . ':' . $mission->position_to;
+
+        $targetPlayerName = '';
+        $targetCoordinate = new Coordinate($mission->galaxy_to, $mission->system_to, $mission->position_to);
+        $targetPlanetService = $this->planetServiceFactory->makeForCoordinate($targetCoordinate);
+        if ($targetPlanetService !== null) {
+            $targetPlayer = $targetPlanetService->getPlayer();
+            if ($targetPlayer !== null) {
+                $targetPlayerName = $targetPlayer->getUsername(false);
+            }
+        }
+
+        $arrivalTime = date('d.m.Y H:i:s', $mission->time_arrival);
+
+        foreach ($usernames as $username) {
+            $username = trim($username);
+
+            if ($username === $senderName) {
+                continue;
+            }
+
+            /** @var User|null $invitedUser */
+            $invitedUser = User::where('username', $username)->first();
+            if ($invitedUser === null) {
+                continue;
+            }
+
+            FleetUnionInvite::firstOrCreate([
+                'fleet_union_id' => $unionId,
+                'user_id' => $invitedUser->id,
+            ]);
+
+            $invitedPlayerService = app(PlayerService::class, ['player_id' => $invitedUser->id]);
+            $this->messageService->sendSystemMessageToPlayer($invitedPlayerService, FleetUnionInviteMessage::class, [
+                'sender_name' => $senderName,
+                'union_name' => $unionName,
+                'target_player' => $targetPlayerName,
+                'target_coords' => $targetCoords,
+                'arrival_time' => $arrivalTime,
+            ]);
         }
     }
 

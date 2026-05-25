@@ -30,9 +30,10 @@ class NPCPlanetService extends PlanetService
         private UnitCollection $npcFleet,
         int $basePlanetId
     ) {
-        // Call parent constructor with the base planet ID
-        // This will load the planet but we'll override the key methods to return NPC data
-        parent::__construct($playerServiceFactory, $settingsService, null, null, $basePlanetId);
+        // Call parent constructor with the base planet ID.
+        // PlanetResourceProductionService is resolved from the container since NPCPlanetService
+        // is constructed directly (not via the container) in ExpeditionMission.
+        parent::__construct($playerServiceFactory, $settingsService, app(PlanetResourceProductionService::class), null, null, $basePlanetId);
     }
 
     /**
