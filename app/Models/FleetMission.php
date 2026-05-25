@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use OGame\Enums\FleetMissionType;
 
 /**
  *
@@ -16,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $galaxy_to
  * @property int|null $system_to
  * @property int|null $position_to
- * @property int $mission_type
+ * @property FleetMissionType $mission_type
  * @property int|null $union_id
  * @property int|null $union_slot
  * @property int $time_departure
@@ -100,6 +101,8 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|FleetMission whereDeuteriumConsumption($value)
  * @property int|null $time_holding
  * @method static Builder<static>|FleetMission whereTimeHolding($value)
+ * @property int|null $time_physical_arrival Actual fleet arrival time. For ACS Defend: = time_arrival - time_holding. For all others: = time_arrival.
+ * @method static Builder<static>|FleetMission whereTimePhysicalArrival($value)
  * @mixin \Eloquent
  */
 class FleetMission extends Model
@@ -110,6 +113,7 @@ class FleetMission extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'mission_type' => FleetMissionType::class,
         'wreck_field_data' => 'array',
     ];
 

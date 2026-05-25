@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\GameMissionFactory;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\GameConstants\UniverseConstants;
@@ -129,7 +130,7 @@ class FleetController extends OGameController
         foreach ($friendlyMissionRows as $row) {
             $eventRowViewModel = new FleetEventRowViewModel();
             $eventRowViewModel->id = $row->id;
-            $eventRowViewModel->mission_type = $row->mission_type;
+            $eventRowViewModel->mission_type = $row->mission_type->value;
             $eventRowViewModel->mission_label = $fleetMissionService->missionTypeToLabel($row->mission_type);
             $eventRowViewModel->mission_time_arrival = $row->time_arrival;
             $eventRowViewModel->time_departure = $row->time_departure;
@@ -206,8 +207,8 @@ class FleetController extends OGameController
             $eventRowViewModel->friendly_status = $mission::getFriendlyStatus()->value;
             // Missile attacks (mission type 10) cannot be recalled.
             // Planet relocation ship transfers (deployment to self) cannot be recalled.
-            $isRelocationTransfer = ($row->mission_type === 4 && $row->planet_id_from === $row->planet_id_to);
-            $eventRowViewModel->is_recallable = ($row->mission_type !== 10 && !$isRelocationTransfer);
+            $isRelocationTransfer = ($row->mission_type === FleetMissionType::Deployment && $row->planet_id_from === $row->planet_id_to);
+            $eventRowViewModel->is_recallable = ($row->mission_type !== FleetMissionType::MissileAttack && !$isRelocationTransfer);
 
             // Track union membership for ACS Attack grouping
             $eventRowViewModel->union_id = $row->union_id;
@@ -215,7 +216,7 @@ class FleetController extends OGameController
             // ACS Attack (type 2) outbound trips display as regular Attack in the movement page
             // with the allianceName tag showing the union identifier.
             // Return trips keep the "ACS Attack" label.
-            if ($row->mission_type === 2 && $row->union_id !== null && !$eventRowViewModel->is_return_trip) {
+            if ($row->mission_type === FleetMissionType::AcsAttack && $row->union_id !== null && !$eventRowViewModel->is_return_trip) {
                 $eventRowViewModel->mission_type = 1;
                 $eventRowViewModel->mission_label = $fleetMissionService->missionTypeToLabel(1);
                 $eventRowViewModel->alliance_name = 'KV' . $row->id;
@@ -224,7 +225,7 @@ class FleetController extends OGameController
             // Set whether this fleet can open the federation (union) overlay.
             // Type 1 (no union): create a new union. Type 2 (has union): edit the existing union.
             $eventRowViewModel->can_create_federation = (
-                in_array($row->mission_type, [1, 2]) &&
+                in_array($row->mission_type, [FleetMissionType::Attack, FleetMissionType::AcsAttack]) &&
                 !$eventRowViewModel->is_return_trip
             );
 
@@ -527,7 +528,7 @@ class FleetController extends OGameController
         }
 
         // Validate holdingtime for expedition missions (mission type 15)
-        if ($mission_type === 15) {
+        if ($mission_type === FleetMissionType::Expedition->value) {
             $astrophysics_level = $player->getResearchLevel(machine_name: 'astrophysics');
             if ($holding_hours < 1 || $holding_hours > $astrophysics_level) {
                 return $this->validationErrorResponse(__('Expedition duration must be between :min_hours and :max_hours hours.', [

@@ -2,6 +2,7 @@
 
 namespace OGame\Factories;
 
+use OGame\Enums\FleetMissionType;
 use OGame\GameMissions\Abstracts\GameMission;
 use OGame\GameMissions\AcsDefendMission;
 use OGame\GameMissions\AttackMission;
@@ -52,14 +53,15 @@ class GameMissionFactory
     }
 
     /**
-     * @param int $missionId
+     * @param int|FleetMissionType $missionId
      * @param array<string,mixed> $dependencies
      *
      * @return GameMission
      */
-    public static function getMissionById(int $missionId, array $dependencies): GameMission
+    public static function getMissionById(int|FleetMissionType $missionId, array $dependencies): GameMission
     {
-        return match ($missionId) {
+        $id = $missionId instanceof FleetMissionType ? $missionId->value : $missionId;
+        return match ($id) {
             1, 2 => resolve(AttackMission::class, $dependencies),
             3 => resolve(TransportMission::class, $dependencies),
             4 => resolve(DeploymentMission::class, $dependencies),
@@ -70,7 +72,7 @@ class GameMissionFactory
             9 => resolve(MoonDestructionMission::class, $dependencies),
             10 => resolve(MissileMission::class, $dependencies),
             15 => resolve(ExpeditionMission::class, $dependencies),
-            default => throw new RuntimeException('Mission not found: ' . $missionId),
+            default => throw new RuntimeException('Mission not found: ' . $id),
         };
     }
 }

@@ -6,14 +6,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use OGame\Factories\PlanetServiceFactory;
-use OGame\Services\BuildingQueueService;
-use OGame\Services\DarkMatterService;
-use OGame\Services\FleetMissionService;
-use OGame\Services\PlanetMoveService;
+use OGame\Jobs\ProcessFleetMission;
+use OGame\Services\FleetMissionProcessingService;
 use OGame\Services\PlayerService;
-use OGame\Services\ResearchQueueService;
-use OGame\Services\SettingsService;
-use OGame\Services\UnitQueueService;
 use Throwable;
 
 class GlobalGame
@@ -52,22 +47,17 @@ class GlobalGame
             // So it's not a big deal, but it's a small performance improvement that could be done.
             $player->planets->current()->update();
 
-            // Update all fleet missions of player that are associated with any of the player's planets.
-            $player->updateFleetMissions();
-
-            // Process any due planet moves.
-            $planetMoveService = resolve(PlanetMoveService::class);
-            $planetMoveService->processDueMoves(
-                resolve(PlanetServiceFactory::class),
-                resolve(DarkMatterService::class),
-                resolve(SettingsService::class),
-                resolve(BuildingQueueService::class),
-                resolve(ResearchQueueService::class),
-                resolve(UnitQueueService::class),
-                resolve(FleetMissionService::class),
-            );
+            // Dispatch queue jobs for any fleet missions that have arrived for this player's planets.
+            // This gives a real-time feel — missions appear resolved on the next page load —
+            // while the actual processing happens in the queue worker (not blocking this request).
+            $planetIds = $player->planets->allIds();
+            $processor = resolve(FleetMissionProcessingService::class);
+            foreach ($processor->getArrivedMissionsByPlanetIds($planetIds) as $mission) {
+                ProcessFleetMission::dispatch($mission->id);
+            }
 
             // Share planet_move_in_progress for all views.
+            $planetMoveService = resolve(\OGame\Services\PlanetMoveService::class);
             $activeMove = $planetMoveService->getActiveMoveForPlanet($player->planets->current());
             view()->share('planet_move_in_progress', $activeMove !== null);
         }

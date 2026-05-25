@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Date;
 use Illuminate\View\View;
 use OGame\Enums\FleetMissionStatus;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\Models\Enums\PlanetType;
 use OGame\Models\FleetMission;
@@ -55,7 +56,7 @@ class FleetEventsController extends OGameController
             // Determine if this mission is currently in its hold period and calculate the display time
             // Hold time mechanics differ between mission types:
             if ($actualHoldingTime > 0) {
-                if ($mission->mission_type === 5) {
+                if ($mission->mission_type === FleetMissionType::AcsDefend) {
                     // ACS Defend: time_arrival = physical_arrival + hold_time
                     // Hold period: from physical arrival until time_arrival
                     $physicalArrivalTime = $mission->time_arrival - $actualHoldingTime;
@@ -97,17 +98,11 @@ class FleetEventsController extends OGameController
 
             // Loop through all missions to calculate all mission counts.
             foreach ($activeMissionRows as $row) {
-                switch ($this->determineFriendly($row, $player)) {
-                    case FleetMissionStatus::Friendly:
-                        $friendlyMissionCount++;
-                        break;
-                    case FleetMissionStatus::Neutral:
-                        $neutralMissionCount++;
-                        break;
-                    case FleetMissionStatus::Hostile:
-                        $hostileMissionCount++;
-                        break;
-                }
+                match ($this->determineFriendly($row, $player)) {
+                    FleetMissionStatus::Friendly => $friendlyMissionCount++,
+                    FleetMissionStatus::Neutral => $neutralMissionCount++,
+                    FleetMissionStatus::Hostile => $hostileMissionCount++,
+                };
             }
         }
 
@@ -159,7 +154,7 @@ class FleetEventsController extends OGameController
             $isInHoldPeriod = false;
 
             if ($actualHoldingTime > 0) {
-                if ($mission->mission_type === 5) {
+                if ($mission->mission_type === FleetMissionType::AcsDefend) {
                     // ACS Defend: hold period is from physical arrival to time_arrival
                     $physicalArrivalTime = $mission->time_arrival - $actualHoldingTime;
                     $isInHoldPeriod = ($physicalArrivalTime <= $currentTime && $mission->time_arrival > $currentTime);
@@ -210,17 +205,17 @@ class FleetEventsController extends OGameController
             $eventRowViewModel = new FleetEventRowViewModel();
             $eventRowViewModel->id = $row->id;
             $eventRowViewModel->real_mission_id = $row->id;
-            $eventRowViewModel->mission_type = $row->mission_type;
+            $eventRowViewModel->mission_type = $row->mission_type->value;
             $eventRowViewModel->mission_label = $fleetMissionService->missionTypeToLabel($row->mission_type);
             // For ACS Defend missions (type 5), show physical arrival time (when fleet actually arrives)
             // For Expeditions and other missions, show time_arrival directly
-            $eventRowViewModel->mission_time_arrival = ($row->mission_type === 5 && $row->time_holding !== null)
-                ? $row->time_arrival - $row->time_holding
+            $eventRowViewModel->mission_time_arrival = ($row->mission_type === FleetMissionType::AcsDefend && $row->time_holding !== null)
+                ? ($row->time_physical_arrival ?? $row->time_arrival - $row->time_holding)
                 : $row->time_arrival;
             $eventRowViewModel->is_return_trip = !empty($row->parent_id); // If mission has a parent, it is a return trip
 
             $eventRowViewModel->origin_planet_name = '';
-            $eventRowViewModel->origin_planet_coords = new Coordinate($row->galaxy_from, $row->system_from, $row->position_from);
+            $eventRowViewModel->origin_planet_coords = new Coordinate($row->galaxy_from ?? 0, $row->system_from ?? 0, $row->position_from ?? 0);
             $eventRowViewModel->origin_planet_type = PlanetType::from($row->type_from);
             if ($row->planet_id_from !== null) {
                 $planetFromService = $planetServiceFactory->make($row->planet_id_from);
@@ -231,7 +226,7 @@ class FleetEventsController extends OGameController
             }
 
             $eventRowViewModel->destination_planet_name = '';
-            $eventRowViewModel->destination_planet_coords = new Coordinate($row->galaxy_to, $row->system_to, $row->position_to);
+            $eventRowViewModel->destination_planet_coords = new Coordinate($row->galaxy_to ?? 0, $row->system_to ?? 0, $row->position_to ?? 0);
             $eventRowViewModel->destination_planet_type = PlanetType::from($row->type_to);
 
             if ($row->planet_id_to !== null) {
@@ -279,8 +274,8 @@ class FleetEventsController extends OGameController
             if ($friendlyStatus === FleetMissionStatus::Friendly) {
                 // Missile attacks (mission type 10) cannot be recalled.
                 // Planet relocation ship transfers (deployment to self) cannot be recalled.
-                $isRelocationTransfer = ($row->mission_type === 4 && $row->planet_id_from === $row->planet_id_to);
-                if ($row->mission_type !== 10 && !$isRelocationTransfer) {
+                $isRelocationTransfer = ($row->mission_type === FleetMissionType::Deployment && $row->planet_id_from === $row->planet_id_to);
+                if ($row->mission_type !== FleetMissionType::MissileAttack && !$isRelocationTransfer) {
                     $eventRowViewModel->is_recallable = true;
                 }
             }
@@ -292,7 +287,7 @@ class FleetEventsController extends OGameController
             $actualHoldingTime = $row->time_holding ?? 0;
             $displayHoldingTime = $actualHoldingTime;
 
-            if ($row->mission_type === 5) {
+            if ($row->mission_type === FleetMissionType::AcsDefend) {
                 $physicalArrivalTime = $row->time_arrival - $actualHoldingTime;
             } else {
                 $physicalArrivalTime = $row->time_arrival;
@@ -301,7 +296,7 @@ class FleetEventsController extends OGameController
             // Determine if mission is currently in hold period
             $isInHoldPeriod = false;
             if ($actualHoldingTime > 0) {
-                if ($row->mission_type === 5) {
+                if ($row->mission_type === FleetMissionType::AcsDefend) {
                     // ACS Defend: hold from physical arrival to time_arrival
                     $isInHoldPeriod = ($physicalArrivalTime <= Date::now()->timestamp && $row->time_arrival > Date::now()->timestamp);
                 } else {
@@ -326,14 +321,14 @@ class FleetEventsController extends OGameController
                 $waitEndRow->is_return_trip = false;
                 // ACS Defend missions (type 5) should be recallable during hold time
                 // Expeditions (type 15) should NOT be recallable during hold time
-                $waitEndRow->is_recallable = ($friendlyStatus === FleetMissionStatus::Friendly && $row->mission_type === 5);
+                $waitEndRow->is_recallable = ($friendlyStatus === FleetMissionStatus::Friendly && $row->mission_type === FleetMissionType::AcsDefend);
                 $waitEndRow->id = $row->id + 888888; // Add large number to avoid DOM ID conflicts
                 $waitEndRow->real_mission_id = $row->id;
                 $waitEndRow->mission_type = $eventRowViewModel->mission_type;
                 $waitEndRow->mission_label = $fleetMissionService->missionTypeToLabel($eventRowViewModel->mission_type);
                 // For ACS Defend, time_arrival already includes hold time (return departure time)
                 // For other missions, add hold time to time_arrival
-                $waitEndRow->mission_time_arrival = ($row->mission_type === 5) ? $row->time_arrival : $row->time_arrival + $actualHoldingTime;
+                $waitEndRow->mission_time_arrival = ($row->mission_type === FleetMissionType::AcsDefend) ? $row->time_arrival : $row->time_arrival + $actualHoldingTime;
                 $waitEndRow->time_departure = $row->time_departure;
                 $waitEndRow->active_recall_time = $eventRowViewModel->active_recall_time;
                 $waitEndRow->origin_planet_name = $eventRowViewModel->origin_planet_name;
@@ -353,10 +348,10 @@ class FleetEventsController extends OGameController
             if ($friendlyStatus === FleetMissionStatus::Friendly && $fleetMissionService->missionHasReturnMission($eventRowViewModel->mission_type) && !$eventRowViewModel->is_return_trip) {
                 // For ACS Defend (type 5), time_arrival already includes hold time (return departure time)
                 // For other missions, add hold time to calculate return departure time
-                if ($row->mission_type === 5) {
+                if ($row->mission_type === FleetMissionType::AcsDefend) {
                     $returnDepartureTime = $row->time_arrival;
-                    // One-way duration = physical travel time (time_arrival - hold - departure)
-                    $oneWayDuration = ($row->time_arrival - $row->time_holding) - $row->time_departure;
+                    $physicalArrival = $row->time_physical_arrival ?? ($row->time_arrival - $row->time_holding);
+                    $oneWayDuration = $physicalArrival - $row->time_departure;
                 } else {
                     $returnDepartureTime = $row->time_arrival + $actualHoldingTime;
                     $oneWayDuration = $row->time_arrival - $row->time_departure;
@@ -433,7 +428,7 @@ class FleetEventsController extends OGameController
                     $vm = new FleetEventRowViewModel();
                     $vm->id = $row->id;
                     $vm->real_mission_id = $row->id;
-                    $vm->mission_type = $row->mission_type;
+                    $vm->mission_type = $row->mission_type->value;
                     $vm->mission_label = $fleetMissionService->missionTypeToLabel($row->mission_type);
                     $vm->mission_time_arrival = $row->time_arrival;
                     $vm->time_departure = $row->time_departure;
@@ -586,25 +581,18 @@ class FleetEventsController extends OGameController
     {
         // Determine if the next mission is a friendly, hostile or neutral mission
         if ($mission->user_id != $player->getId()) {
-            // Not from the current player, check mission type.
-            switch ($mission->mission_type) {
-                case 1:
-                case 2:
-                case 6:
-                case 9:
-                case 10: // Missile attack
-                    // Hostile
-                    return FleetMissionStatus::Hostile;
-                case 3:
-                    // Neutral;
-                    return FleetMissionStatus::Neutral;
-                case 5: // ACS Defend
-                    // Neutral (displays as "friendly" in UI with gold color)
-                    return FleetMissionStatus::Neutral;
-            }
+            return match ($mission->mission_type) {
+                FleetMissionType::Attack,
+                FleetMissionType::AcsAttack,
+                FleetMissionType::Espionage,
+                FleetMissionType::Destroy,
+                FleetMissionType::MissileAttack => FleetMissionStatus::Hostile,
+                FleetMissionType::Transport,
+                FleetMissionType::AcsDefend => FleetMissionStatus::Neutral,
+                default => FleetMissionStatus::Friendly,
+            };
         }
 
-        // From current player, it is a friendly mission.
         return FleetMissionStatus::Friendly;
     }
 }

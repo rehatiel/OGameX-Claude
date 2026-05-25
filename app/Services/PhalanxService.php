@@ -2,6 +2,7 @@
 
 namespace OGame\Services;
 
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\GameMissionFactory;
 use OGame\Factories\PlayerServiceFactory;
 use OGame\GameObjects\Models\Units\UnitCollection;
@@ -161,9 +162,10 @@ class PhalanxService
                         // Yes! This fleet left from the scanned planet and will return to it
                         // Add the predicted return trip
                         // For ACS Defend (type 5), time_arrival already includes hold time
-                        if ($mission->mission_type === 5) {
+                        if ($mission->mission_type === FleetMissionType::AcsDefend) {
+                            $physicalArrival = $mission->time_physical_arrival ?? ($mission->time_arrival - ($mission->time_holding ?? 0));
                             $return_time_arrival = $mission->time_arrival +
-                                                 ($mission->time_arrival - $mission->time_departure - ($mission->time_holding ?? 0));
+                                                 ($physicalArrival - $mission->time_departure);
                         } else {
                             $return_time_arrival = $mission->time_arrival +
                                                  ($mission->time_arrival - $mission->time_departure) +
@@ -177,7 +179,7 @@ class PhalanxService
 
                         $scan_results[] = [
                             'mission_id' => $mission->id + 999999,
-                            'mission_type' => $mission->mission_type,
+                            'mission_type' => $mission->mission_type->value,
                             'mission_type_name' => $mission_type_name,
                             'is_incoming' => true, // Return trip is incoming
                             'is_return_trip' => true,
@@ -234,8 +236,9 @@ class PhalanxService
                 if ($parent_mission) {
                     // Calculate return arrival time same way as FleetEventsController does
                     // For ACS Defend (type 5), time_arrival already includes hold time
-                    if ($parent_mission->mission_type === 5) {
-                        $one_way_duration = ($parent_mission->time_arrival - ($parent_mission->time_holding ?? 0)) - $parent_mission->time_departure;
+                    if ($parent_mission->mission_type === FleetMissionType::AcsDefend) {
+                        $physicalArrival = $parent_mission->time_physical_arrival ?? ($parent_mission->time_arrival - ($parent_mission->time_holding ?? 0));
+                        $one_way_duration = $physicalArrival - $parent_mission->time_departure;
                         $display_time_arrival = $parent_mission->time_arrival + $one_way_duration;
                     } else {
                         // For other missions: Return arrival = parent arrival + travel duration + holding time
@@ -253,7 +256,7 @@ class PhalanxService
             // Add the incoming mission to results
             $scan_results[] = [
                 'mission_id' => $mission->id,
-                'mission_type' => $mission->mission_type,
+                'mission_type' => $mission->mission_type->value,
                 'mission_type_name' => $mission_type_name,
                 'is_incoming' => $is_incoming,
                 'is_return_trip' => $is_return_trip,
@@ -287,10 +290,10 @@ class PhalanxService
     /**
      * Get mission type name from mission type ID.
      *
-     * @param int $mission_type
+     * @param int|FleetMissionType $mission_type
      * @return string Mission type name
      */
-    private function getMissionTypeName(int $mission_type): string
+    private function getMissionTypeName(int|FleetMissionType $mission_type): string
     {
         try {
             // Use GameMissionFactory for centralized mission definitions
@@ -305,10 +308,10 @@ class PhalanxService
      *
      * @param int $fleet_owner_id The player ID who owns the fleet
      * @param int $scanner_player_id The player ID performing the scan
-     * @param int $mission_type The mission type ID
+     * @param int|FleetMissionType $mission_type The mission type ID
      * @return string Fleet direction label
      */
-    private function getFleetDirectionLabel(int $fleet_owner_id, int $scanner_player_id, int $mission_type): string
+    private function getFleetDirectionLabel(int $fleet_owner_id, int $scanner_player_id, int|FleetMissionType $mission_type): string
     {
         // If scanner owns the fleet
         if ($fleet_owner_id === $scanner_player_id) {
@@ -318,7 +321,7 @@ class PhalanxService
         // If attack mission (type 1 = Attack) or ACS Attack (type 2)
         // TODO: ACS Attack (type 2) fleets are not yet shown in Phalanx scan results.
         // Each union member fleet needs to be displayed individually, matching OGame behaviour.
-        if ($mission_type === 1) {
+        if ($mission_type === FleetMissionType::Attack) {
             return 'Enemy fleet';
         }
 
@@ -329,10 +332,10 @@ class PhalanxService
     /**
      * Check if a mission type has a return trip.
      *
-     * @param int $mission_type
+     * @param int|FleetMissionType $mission_type
      * @return bool True if mission has return trip
      */
-    private function missionHasReturnTrip(int $mission_type): bool
+    private function missionHasReturnTrip(int|FleetMissionType $mission_type): bool
     {
         try {
             // Use GameMissionFactory for centralized mission definitions

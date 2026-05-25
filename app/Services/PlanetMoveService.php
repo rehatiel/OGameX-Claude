@@ -5,6 +5,7 @@ namespace OGame\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
 use OGame\Enums\DarkMatterTransactionType;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\GameMessages\PlanetRelocationSuccess;
 use OGame\GameObjects\Models\Units\UnitCollection;
@@ -255,7 +256,7 @@ class PlanetMoveService
         $mission->system_to = $newCoordinate->system;
         $mission->position_to = $newCoordinate->position;
         $mission->type_to = $planet->getPlanetType()->value;
-        $mission->mission_type = 4; // Deployment
+        $mission->mission_type = FleetMissionType::Deployment;
         $mission->time_departure = $now;
         $mission->time_arrival = $now + $duration;
         $mission->metal = 0;

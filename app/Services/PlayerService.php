@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use OGame\Enums\FleetMissionType;
 use OGame\GameObjects\Models\Calculations\CalculationType;
 use OGame\Models\BuildingQueue;
 use OGame\Models\FleetMission;
@@ -522,7 +523,7 @@ class PlayerService
         // All other missions use fleet slots for their entire duration (travel + hold + return)
         $fleetMissions = $activeMissions->filter(function ($mission) {
             // Exclude missile attacks
-            if ($mission->mission_type === 10) {
+            if ($mission->mission_type === FleetMissionType::MissileAttack) {
                 return false;
             }
 
@@ -530,6 +531,32 @@ class PlayerService
         });
 
         return $fleetMissions->count();
+    }
+
+    /**
+     * Process all arrived fleet missions for this player's planets.
+     * Thin wrapper around FleetMissionProcessingService used by tests and the GlobalGame middleware.
+     *
+     * @return void
+     */
+    public function updateFleetMissions(): void
+    {
+        $planetIds = array_map(fn($planet) => $planet->getPlanetId(), $this->planets->all());
+        if (empty($planetIds)) {
+            return;
+        }
+
+        $processor = app(FleetMissionProcessingService::class);
+        $missions = $processor->getArrivedMissionsByPlanetIds($planetIds);
+
+        foreach ($missions as $mission) {
+            DB::transaction(function () use ($mission, $processor) {
+                $locked = FleetMission::lockForUpdate()->find($mission->id);
+                if ($locked !== null) {
+                    $processor->updateMission($locked);
+                }
+            });
+        }
     }
 
     /**
@@ -567,7 +594,7 @@ class PlayerService
 
         // Count only missions that are of type 15 (expedition)
         $expeditionMissions = $activeMissions->filter(function ($mission) {
-            return $mission->mission_type === 15;
+            return $mission->mission_type === FleetMissionType::Expedition;
         });
 
         return $expeditionMissions->count();
@@ -677,58 +704,6 @@ class PlayerService
         if ($save_user) {
             $this->user->save();
         }
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function updateFleetMissions(): void
-    {
-        DB::transaction(function () {
-            // Attempt to acquire a lock on the row for this planet. This is to prevent
-            // race conditions when multiple requests are updating the fleet missions for the
-            // same planet and potentially doing double insertions or overwriting each other's changes.
-            $planetIds = $this->planets->allIds();
-            $planetMissionUpdateLock = Planet::whereIn('id', $planetIds)
-                ->lockForUpdate()
-                ->get();
-
-            if ($planetMissionUpdateLock->count() === count($planetIds)) {
-                try {
-                    $fleetMissionService = resolve(FleetMissionService::class, ['player' => $this]);
-                    $missions = $fleetMissionService->getArrivedMissionsByPlanetIds($planetIds);
-
-                    foreach ($missions as $mission) {
-                        // Attempt to acquire a lock on the row for this fleet mission. This is to prevent
-                        // race conditions when multiple requests are updating the same fleet mission and
-                        // potentially doing double insertions or overwriting each other's changes.
-                        $fleetMissionLock = FleetMission::where('id', $mission->id)
-                            ->lockForUpdate()
-                            ->first();
-
-                        if ($fleetMissionLock) {
-                            try {
-                                $fleetMissionService->updateMission($mission);
-                            } catch (Exception $e) {
-                                throw new Exception('Could not update fleet mission with ID ' . $mission->id . ': ' . $e->getMessage());
-                            }
-                        } else {
-                            throw new Exception('Could not acquire update fleet mission update lock.');
-                        }
-                    }
-
-                    if ($missions->count() > 0) {
-                        // Update the current player object and all child planets to make sure any changes
-                        // to the fleet missions are reflected in the player/planet objects.
-                        $this->load($this->getId());
-                    }
-                } catch (Exception $e) {
-                    throw new RuntimeException('Fleet mission service process error: ' . $e->getMessage());
-                }
-            } else {
-                throw new Exception('Could not acquire update fleet mission planet lock.');
-            }
-        });
     }
 
     /**

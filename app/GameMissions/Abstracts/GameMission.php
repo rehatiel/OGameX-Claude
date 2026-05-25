@@ -5,6 +5,7 @@ namespace OGame\GameMissions\Abstracts;
 use Exception;
 use Illuminate\Support\Facades\Date;
 use OGame\Enums\FleetMissionStatus;
+use OGame\Enums\FleetMissionType;
 use OGame\Enums\FleetSpeedType;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\Factories\PlayerServiceFactory;
@@ -147,10 +148,16 @@ abstract class GameMission
         // Store the original arrival time before modifying it.
         // For ACS Defend, we need physical arrival time for return trip calculation.
         $originalArrivalTime = $mission->time_arrival;
-        if ($mission->mission_type === 5 && $mission->time_holding !== null) {
-            $physicalArrivalTime = $mission->time_arrival - $mission->time_holding;
+        $physicalArrivalTime = $mission->time_physical_arrival ?? $mission->time_arrival;
+        $isAcsDefendInHoldTime = (
+            $mission->mission_type === FleetMissionType::AcsDefend
+            && $mission->time_holding !== null
+            && $mission->time_holding > 0
+            && $mission->time_physical_arrival !== null
+            && $mission->time_physical_arrival <= $currentTime
+        );
+        if ($mission->mission_type === FleetMissionType::AcsDefend && $mission->time_holding !== null) {
             $hasArrived = $physicalArrivalTime <= $currentTime;
-            // For ACS Defend, use physical arrival time for adjustment
             $originalArrivalTimeForAdjustment = $physicalArrivalTime;
         } else {
             $hasArrived = $mission->time_arrival <= $currentTime;
@@ -175,10 +182,11 @@ abstract class GameMission
 
         // Start the return mission with the resources and units of the original mission.
         // getResources() already includes parent mission resources.
-        // If the mission had already arrived, we need to adjust the return trip calculation.
-        // The adjustment ensures the return takes the same time as the original outbound trip,
-        // not including any elapsed hold time.
-        $returnTripAdjustment = $hasArrived ? ($originalArrivalTimeForAdjustment - $currentTime) : 0;
+        // For ACS Defend recalled during hold time, no adjustment is needed: startReturn() already
+        // computes oneWayDuration from time_physical_arrival, giving the full flight duration.
+        // For other arrived missions, apply a negative adjustment so the return trip reflects only
+        // the original flight time, not extra elapsed time.
+        $returnTripAdjustment = ($hasArrived && !$isAcsDefendInHoldTime) ? ($originalArrivalTimeForAdjustment - $currentTime) : 0;
         $this->startReturn($mission, $this->fleetMissionService->getResources($mission), $this->fleetMissionService->getFleetUnits($mission), $returnTripAdjustment);
     }
 
@@ -295,7 +303,7 @@ abstract class GameMission
         $mission->system_from = $planet->getPlanetCoordinates()->system;
         $mission->position_from = $planet->getPlanetCoordinates()->position;
 
-        $mission->mission_type = static::$typeId;
+        $mission->mission_type = FleetMissionType::from(static::$typeId);
         $mission->time_departure = $time_start;
 
         // Holding time is the amount of time the fleet will wait at the target planet and/or how long expedition will last.
@@ -307,14 +315,17 @@ abstract class GameMission
             $mission->time_holding = $holdingHours * 3600;
             $targetType = PlanetType::DeepSpace;
             $mission->time_arrival = $time_end;
+            $mission->time_physical_arrival = $time_end;
         } elseif (static::class === AcsDefendMission::class) {
             $mission->time_holding = $holdingHours * 3600;
-            // For ACS Defend, time_arrival includes the hold time.
-            // This means the mission won't be processed until hold time expires.
-            // Hold time is stored as raw game time (not affected by fleet speed).
+            // For ACS Defend, time_arrival includes the hold time so the mission is not
+            // processed until the hold period expires. time_physical_arrival records the
+            // actual moment the fleet arrives at the destination (before hold starts).
             $mission->time_arrival = $time_end + ($holdingHours * 3600);
+            $mission->time_physical_arrival = $time_end;
         } else {
             $mission->time_arrival = $time_end;
+            $mission->time_physical_arrival = $time_end;
         }
 
         $mission->type_to = $targetType->value;
@@ -374,7 +385,7 @@ abstract class GameMission
             // Target planet was relocated — return fleet (or cancel if no return trip).
             // Only applies to mission types that normally target an existing planet/moon.
             // Colonize (7), recycle (8), and expedition (15) legitimately have null planet_id_to.
-            if ($mission->planet_id_to === null && !in_array($mission->mission_type, [7, 8, 15], true)) {
+            if ($mission->planet_id_to === null && !in_array($mission->mission_type, [FleetMissionType::Colonise, FleetMissionType::Recycle, FleetMissionType::Expedition], true)) {
                 $mission->processed = 1;
                 $mission->save();
                 if (static::$hasReturnMission) {
@@ -466,7 +477,7 @@ abstract class GameMission
 
         // For ACS Defend (type 5), time_arrival already includes hold time
         // For other missions with hold time (like Expeditions), add actual holding time
-        if ($parentMission->mission_type === 5) {
+        if ($parentMission->mission_type === FleetMissionType::AcsDefend) {
             $time_start = $parentMission->time_arrival;
         } else {
             $time_start = $parentMission->time_arrival + $actualHoldingTime;
@@ -478,8 +489,8 @@ abstract class GameMission
         // For other missions, one-way duration = arrival - departure
         if ($overrideReturnDuration !== null) {
             $oneWayDuration = $overrideReturnDuration;
-        } elseif ($parentMission->mission_type === 5 && $parentMission->time_holding !== null) {
-            $oneWayDuration = ($parentMission->time_arrival - $parentMission->time_holding) - $parentMission->time_departure;
+        } elseif ($parentMission->mission_type === FleetMissionType::AcsDefend && $parentMission->time_holding !== null) {
+            $oneWayDuration = ($parentMission->time_physical_arrival ?? ($parentMission->time_arrival - $parentMission->time_holding)) - $parentMission->time_departure;
         } else {
             $oneWayDuration = $parentMission->time_arrival - $parentMission->time_departure;
         }
@@ -609,16 +620,14 @@ abstract class GameMission
         // Always add the planet owner's forces first
         $defenders[] = DefenderFleet::fromPlanet($planet);
 
-        // Find all ACS Defend fleets currently holding at this planet
-        // For ACS Defend, time_arrival includes hold time, so we need to check:
-        // - physical_arrival (time_arrival - time_holding) <= now (fleet has arrived)
-        // - time_arrival > now (still holding, hold hasn't expired)
+        // Find all ACS Defend fleets currently holding at this planet.
+        // time_physical_arrival = when fleet physically arrived; time_arrival = when hold expires.
         $defendMissions = FleetMission::query()
-            ->where('mission_type', 5)  // ACS Defend
+            ->where('mission_type', 5)
             ->where('planet_id_to', $planet->getPlanetId())
-            ->where('processed', 0)  // Still active
-            ->whereRaw('time_arrival - COALESCE(time_holding, 0) <= ?', [Date::now()->timestamp])  // Has physically arrived
-            ->where('time_arrival', '>', Date::now()->timestamp)  // Still holding (hold hasn't expired)
+            ->where('processed', 0)
+            ->whereRaw('COALESCE(time_physical_arrival, time_arrival - COALESCE(time_holding, 0)) <= ?', [Date::now()->timestamp])
+            ->where('time_arrival', '>', Date::now()->timestamp)
             ->get();
 
         // Add each defending fleet

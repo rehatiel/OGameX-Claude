@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Log;
+use OGame\Enums\FleetMissionType;
 use OGame\Facades\AppUtil;
 use OGame\Factories\PlanetServiceFactory;
 use OGame\Models\Alliance;
@@ -1009,7 +1010,7 @@ class GalaxyController extends OGameController
         $mission->position_to = $position;
         $mission->type_from = $currentPlanet->getPlanetType()->value;
         $mission->type_to = $type;
-        $mission->mission_type = 10; // Missile attack mission
+        $mission->mission_type = FleetMissionType::MissileAttack;
         $mission->time_departure = time();
         $mission->time_arrival = time() + $flightTime;
         $mission->canceled = 0;

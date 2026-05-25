@@ -135,12 +135,12 @@
                                     @foreach ($missions as $mission)
                                         @php
                                             $username    = $users[$mission->user_id] ?? "User #{$mission->user_id}";
-                                            $typeLabel   = $missionTypeLabels[$mission->mission_type] ?? "Type {$mission->mission_type}";
+                                            $typeLabel   = $missionTypeLabels[$mission->mission_type->value] ?? "Type {$mission->mission_type->value}";
                                             $timeLeft    = $mission->time_arrival - $now;
                                             $holdingDisp = $mission->time_holding ? $mission->time_holding : '—';
                                             $rowBg       = $loop->even ? '#12202e' : '#0f1c28';
-                                            $isAttack    = in_array($mission->mission_type, [1, 2]);
-                                            $isExped     = $mission->mission_type === 15;
+                                            $isAttack    = in_array($mission->mission_type->value, [1, 2]);
+                                            $isExped     = $mission->mission_type->value === 15;
                                             $badgeBg     = $isAttack ? '#4a1010' : ($isExped ? '#1a3a1a' : '#1a2a3a');
                                             $badgeColor  = $isAttack ? '#f77'    : ($isExped ? '#8f8'    : '#8ec8f0');
                                         @endphp

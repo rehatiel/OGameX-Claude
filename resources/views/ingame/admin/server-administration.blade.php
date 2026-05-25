@@ -150,7 +150,7 @@
                                                 // Aggregate transport totals by direction to surface one-sided pushing.
                                                 $transferByDir = [];
                                                 foreach ($group['cross_missions'] as $m) {
-                                                    if ($m->mission_type !== 3) { continue; }
+                                                    if ($m->mission_type->value !== 3) { continue; }
                                                     $dir = $m->sender_username . '→' . $m->target_username;
                                                     if (!isset($transferByDir[$dir])) {
                                                         $transferByDir[$dir] = ['from' => $m->sender_username, 'to' => $m->target_username, 'metal' => 0, 'crystal' => 0, 'deuterium' => 0, 'count' => 0];
@@ -193,7 +193,7 @@
                                                     <tbody>
                                                         @foreach ($group['cross_missions'] as $mission)
                                                             @php
-                                                                $missionLabel = match($mission->mission_type) {
+                                                                $missionLabel = match($mission->mission_type->value) {
                                                                     1 => ['label' => 'Attack',    'color' => '#e74c3c'],
                                                                     3 => ['label' => 'Transport', 'color' => '#3498db'],
                                                                     6 => ['label' => 'Espionage', 'color' => '#f39c12'],

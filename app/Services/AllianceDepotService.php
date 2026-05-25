@@ -3,6 +3,7 @@
 namespace OGame\Services;
 
 use Illuminate\Support\Facades\Date;
+use OGame\Enums\FleetMissionType;
 use OGame\Models\FleetMission;
 
 class AllianceDepotService
@@ -62,19 +63,19 @@ class AllianceDepotService
         $currentTime = Date::now()->timestamp;
 
         // Mission must be an ACS Defend mission (type 5)
-        if ($outboundMission->mission_type !== 5) {
+        if ($outboundMission->mission_type !== FleetMissionType::AcsDefend) {
             return false;
         }
 
         // If return mission exists, it must also be ACS Defend
-        if ($returnMission && $returnMission->mission_type !== 5) {
+        if ($returnMission && $returnMission->mission_type !== FleetMissionType::AcsDefend) {
             return false;
         }
 
         // With the new architecture, time_arrival includes hold time
         // Calculate physical arrival time to check if fleet has arrived
         // Hold time is stored as raw game time (not affected by fleet speed)
-        $physicalArrivalTime = $outboundMission->time_arrival - ($outboundMission->time_holding ?? 0);
+        $physicalArrivalTime = $outboundMission->time_physical_arrival ?? ($outboundMission->time_arrival - ($outboundMission->time_holding ?? 0));
 
         // Fleet must have physically arrived and still be holding (hold hasn't expired)
         if ($physicalArrivalTime > $currentTime || $currentTime >= $outboundMission->time_arrival) {

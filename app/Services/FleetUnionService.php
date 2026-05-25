@@ -3,6 +3,7 @@
 namespace OGame\Services;
 
 use Exception;
+use OGame\Enums\FleetMissionType;
 use OGame\Models\FleetMission;
 use OGame\Models\FleetUnion;
 
@@ -40,7 +41,7 @@ class FleetUnionService
     public function createUnion(FleetMission $mission, string|null $name = null): FleetUnion
     {
         // Validate mission type (must be attack - type 1)
-        if ($mission->mission_type !== 1) {
+        if ($mission->mission_type !== FleetMissionType::Attack) {
             throw new Exception(__('t_acs.error_invalid_mission_type'));
         }
 
@@ -70,7 +71,7 @@ class FleetUnionService
         // Link the mission to the union and convert to ACS Attack
         $mission->union_id = $union->id;
         $mission->union_slot = 1; // Initiator always gets slot 1
-        $mission->mission_type = 2; // Convert to ACS Attack
+        $mission->mission_type = FleetMissionType::AcsAttack;
         $mission->save();
 
         return $union;
@@ -128,7 +129,7 @@ class FleetUnionService
         // Link mission to union
         $mission->union_id = $union->id;
         $mission->union_slot = $nextSlot;
-        $mission->mission_type = 2; // ACS Attack
+        $mission->mission_type = FleetMissionType::AcsAttack;
 
         // Adjust arrival time to match union (if fleet arrives earlier)
         if ($mission->time_arrival < $union->time_arrival) {
@@ -178,7 +179,7 @@ class FleetUnionService
         // Remove from union and revert to regular attack
         $mission->union_id = null;
         $mission->union_slot = null;
-        $mission->mission_type = 1;
+        $mission->mission_type = FleetMissionType::Attack;
         $mission->save();
 
         // Check if union is now empty

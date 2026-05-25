@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use OGame\Enums\FleetMissionType;
 use OGame\Factories\GameMissionFactory;
 use OGame\Factories\PlayerServiceFactory;
 use OGame\Http\Controllers\OGameController;
@@ -685,7 +686,7 @@ class ServerAdministrationController extends OGameController
         foreach ($missions as $mission) {
             $originRequiresPlanet = in_array($mission->type_from, [PlanetType::Planet->value, PlanetType::Moon->value], true);
             $destinationRequiresPlanet = in_array($mission->type_to, [PlanetType::Planet->value, PlanetType::Moon->value], true);
-            $destinationCanBeMissing = $mission->parent_id === null && in_array($mission->mission_type, [7, 8, 15], true);
+            $destinationCanBeMissing = $mission->parent_id === null && in_array($mission->mission_type, [FleetMissionType::Colonise, FleetMissionType::Recycle, FleetMissionType::Expedition]);
 
             $originExists = !$originRequiresPlanet || ($mission->planet_id_from !== null && $planets->has($mission->planet_id_from));
             $destinationExists = !$destinationRequiresPlanet
@@ -704,8 +705,8 @@ class ServerAdministrationController extends OGameController
                 'id' => $mission->id,
                 'user' => $users->get($mission->user_id),
                 'parent_id' => $mission->parent_id,
-                'mission_type' => $mission->mission_type,
-                'mission_label' => $missionTypeLabels->get($mission->mission_type, 'Unknown'),
+                'mission_type' => $mission->mission_type->value,
+                'mission_label' => $missionTypeLabels->get($mission->mission_type->value, 'Unknown'),
                 'time_arrival' => (int) $mission->time_arrival,
                 'overdue_seconds' => $overdueSeconds,
                 'planet_id_from' => $mission->planet_id_from,

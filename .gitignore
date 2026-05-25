@@ -19,3 +19,19 @@ yarn-error.log
 rust/*/target
 # Compiled rust apps (rust modules are recompiled during container start)
 storage/rust-libs/*.so
+
+# graphify outputs
+graphify-out/
+.graphify_python
+.graphify_detect.json
+.graphify_extract.json
+.graphify_ast.json
+.graphify_semantic.json
+.graphify_analysis.json
+.graphify_labels.json
+.graphify_old.json
+.graphify_incremental.json
+*.graphify_chunk_*.json
+
+# Claude Code
+.claude/settings.local.json
