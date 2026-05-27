@@ -5,6 +5,7 @@ namespace OGame\Services;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use OGame\GameObjects\Models\Enums\GameObjectType;
 use OGame\Models\BuildingQueue;
 use OGame\Models\Resources;
@@ -459,43 +460,46 @@ class BuildingQueueService
      */
     public function cancel(PlanetService $planet, int $building_queue_id, int $building_id): void
     {
-        $queue_item = BuildingQueue::where([
-            ['id', $building_queue_id],
-            ['planet_id', $planet->getPlanetId()],
-            ['object_id', $building_id],
-            ['processed', 0],
-            ['canceled', 0],
-        ])->first();
+        DB::transaction(function () use ($planet, $building_queue_id, $building_id) {
+            // Lock the row so concurrent cancel requests for the same item cannot both refund.
+            $queue_item = BuildingQueue::where([
+                ['id', $building_queue_id],
+                ['planet_id', $planet->getPlanetId()],
+                ['object_id', $building_id],
+                ['processed', 0],
+                ['canceled', 0],
+            ])->lockForUpdate()->first();
 
-        // If object is found: add canceled flag.
-        if ($queue_item) {
-            // Give back resources if the current entry was already building.
-            if ($queue_item->building === 1) {
-                $planet->addResources(new Resources($queue_item->metal, $queue_item->crystal, $queue_item->deuterium, 0));
+            // If object is found: add canceled flag.
+            if ($queue_item) {
+                // Give back resources if the current entry was already building.
+                if ($queue_item->building === 1) {
+                    $planet->addResources(new Resources($queue_item->metal, $queue_item->crystal, $queue_item->deuterium, 0));
+                }
+
+                // Add canceled flag to the main entry.
+                $queue_item->building = 0;
+                $queue_item->canceled = 1;
+
+                $queue_item->save();
+
+                // Check if requirements for all other items in the queue are still met.
+                // So e.g. if user cancels build order for metal mine
+                // level 5 then any other already queued build orders for lvl 6,7,8 etc.
+                // will also be canceled. Same applies to building requirements,
+                // if user cancels build order for robotics factory which is requirement
+                // for shipyard then shipyard will also be canceled.
+                // Requirements are checked only for building queue objects as
+                // unit queue objects cannot be canceled.
+                $this->cancelItemMissingRequirements($planet);
+
+                $research_queue = resolve(ResearchQueueService::class);
+                $research_queue->cancelItemMissingRequirements($planet->getPlayer(), $planet);
+
+                // Set the next queue item to start (if applicable)
+                $this->start($planet);
             }
-
-            // Add canceled flag to the main entry.
-            $queue_item->building = 0;
-            $queue_item->canceled = 1;
-
-            $queue_item->save();
-
-            // Check if requirements for all other items in the queue are still met.
-            // So e.g. if user cancels build order for metal mine
-            // level 5 then any other already queued build orders for lvl 6,7,8 etc.
-            // will also be canceled. Same applies to building requirements,
-            // if user cancels build order for robotics factory which is requirement
-            // for shipyard then shipyard will also be canceled.
-            // Requirements are checked only for building queue objects as
-            // unit queue objects cannot be canceled.
-            $this->cancelItemMissingRequirements($planet);
-
-            $research_queue = resolve(ResearchQueueService::class);
-            $research_queue->cancelItemMissingRequirements($planet->getPlayer(), $planet);
-
-            // Set the next queue item to start (if applicable)
-            $this->start($planet);
-        }
+        });
     }
 
     /**

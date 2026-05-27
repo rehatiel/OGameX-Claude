@@ -1326,6 +1326,12 @@ class PlanetService
      */
     public function addResources(Resources $resources, bool $save_planet = true): void
     {
+        if ($save_planet) {
+            $this->addResourcesAtomic($resources);
+            return;
+        }
+
+        // In-memory update only — caller is responsible for atomicity and saving.
         if (!empty($resources->metal->get())) {
             $this->planet->metal += $resources->metal->get();
         }
@@ -1339,12 +1345,48 @@ class PlanetService
         // Ensure that resources cannot go below 0. This is to prevent negative values due to negative resource production
         // which could be caused by e.g. consumption of deuterium (high level fusion plant) and not enough
         // production (low level deuterium synthesizer).
-        $this->planet->metal = max(0, $this->planet->metal);
-        $this->planet->crystal = max(0, $this->planet->crystal);
+        $this->planet->metal    = max(0, $this->planet->metal);
+        $this->planet->crystal  = max(0, $this->planet->crystal);
         $this->planet->deuterium = max(0, $this->planet->deuterium);
+    }
 
-        if ($save_planet) {
-            $this->save();
+    /**
+     * Atomically add resources to a planet using a single UPDATE query.
+     * Prevents lost-update race conditions when concurrent requests add resources to the same planet.
+     * Mirrors the pattern used by deductResourcesAtomic().
+     */
+    public function addResourcesAtomic(Resources $resources): void
+    {
+        $metal     = (int) $resources->metal->get();
+        $crystal   = (int) $resources->crystal->get();
+        $deuterium = (int) $resources->deuterium->get();
+
+        $updates = [];
+        if ($metal !== 0) {
+            $updates['metal']     = DB::raw("GREATEST(0, metal + {$metal})");
+        }
+        if ($crystal !== 0) {
+            $updates['crystal']   = DB::raw("GREATEST(0, crystal + {$crystal})");
+        }
+        if ($deuterium !== 0) {
+            $updates['deuterium'] = DB::raw("GREATEST(0, deuterium + {$deuterium})");
+        }
+
+        if (empty($updates)) {
+            return;
+        }
+
+        Planet::where('id', $this->getPlanetId())->update($updates);
+
+        // Sync in-memory model to reflect the DB state.
+        if ($metal !== 0) {
+            $this->planet->metal     = max(0, $this->planet->metal + $metal);
+        }
+        if ($crystal !== 0) {
+            $this->planet->crystal   = max(0, $this->planet->crystal + $crystal);
+        }
+        if ($deuterium !== 0) {
+            $this->planet->deuterium = max(0, $this->planet->deuterium + $deuterium);
         }
     }
 

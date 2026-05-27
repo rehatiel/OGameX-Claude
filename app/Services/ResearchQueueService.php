@@ -5,6 +5,7 @@ namespace OGame\Services;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use OGame\GameObjects\Models\Enums\GameObjectType;
 use OGame\Models\ResearchQueue;
 use OGame\Models\Resources;
@@ -391,51 +392,55 @@ class ResearchQueueService
      */
     public function cancel(PlayerService $player, int $research_queue_id, int $research_id): void
     {
-        $queue_item = $this->model
-            ->join('planets', 'research_queues.planet_id', '=', 'planets.id')
-            ->join('users', 'planets.user_id', '=', 'users.id')
-            ->where([
-                ['users.id', $player->getId()],
-                ['research_queues.id', $research_queue_id],
-                ['object_id', $research_id],
-                ['processed', 0],
-                ['canceled', 0],
-            ])
-            ->select('research_queues.*')
-            ->first();
+        DB::transaction(function () use ($player, $research_queue_id, $research_id) {
+            // Lock the row so concurrent cancel requests for the same item cannot both refund.
+            $queue_item = $this->model
+                ->join('planets', 'research_queues.planet_id', '=', 'planets.id')
+                ->join('users', 'planets.user_id', '=', 'users.id')
+                ->where([
+                    ['users.id', $player->getId()],
+                    ['research_queues.id', $research_queue_id],
+                    ['object_id', $research_id],
+                    ['processed', 0],
+                    ['canceled', 0],
+                ])
+                ->select('research_queues.*')
+                ->lockForUpdate()
+                ->first();
 
-        // If object is found: add canceled flag.
-        if ($queue_item) {
-            // Typecast to a new object to avoid issues with the model.
-            $queue_item = $queue_item instanceof ResearchQueue ? $queue_item : new ResearchQueue($queue_item->getAttributes());
-            $planet = $player->planets->getById($queue_item->planet_id);
+            // If object is found: add canceled flag.
+            if ($queue_item) {
+                // Typecast to a new object to avoid issues with the model.
+                $queue_item = $queue_item instanceof ResearchQueue ? $queue_item : new ResearchQueue($queue_item->getAttributes());
+                $planet = $player->planets->getById($queue_item->planet_id);
 
-            // Gets all research queue records of this target level and all that
-            // come after it. So e.g. if user cancels build order for metal mine
-            // level 5 then any other already queued build orders for lvl 6,7,8 etc.
-            // will also be canceled. Same applies to research requirements,
-            // if user cancels research order for Energy Technology which is requirement
-            // for Impulse Drive then Impulse Drive will also be canceled.
+                // Gets all research queue records of this target level and all that
+                // come after it. So e.g. if user cancels build order for metal mine
+                // level 5 then any other already queued build orders for lvl 6,7,8 etc.
+                // will also be canceled. Same applies to research requirements,
+                // if user cancels research order for Energy Technology which is requirement
+                // for Impulse Drive then Impulse Drive will also be canceled.
 
-            // Give back resources if the current entry was already building.
-            if ($queue_item->building === 1) {
-                $planet->addResources(new Resources($queue_item->metal, $queue_item->crystal, $queue_item->deuterium, 0));
+                // Give back resources if the current entry was already building.
+                if ($queue_item->building === 1) {
+                    $planet->addResources(new Resources($queue_item->metal, $queue_item->crystal, $queue_item->deuterium, 0));
+                }
+
+                // Add canceled flag to the main entry.
+                $queue_item->building = 0;
+                $queue_item->canceled = 1;
+
+                $queue_item->save();
+
+                $this->cancelItemMissingRequirements($player, $planet);
+
+                $build_queue = resolve(BuildingQueueService::class);
+                $build_queue->cancelItemMissingRequirements($planet);
+
+                // Set the next queue item to start (if applicable)
+                $this->start($player);
             }
-
-            // Add canceled flag to the main entry.
-            $queue_item->building = 0;
-            $queue_item->canceled = 1;
-
-            $queue_item->save();
-
-            $this->cancelItemMissingRequirements($player, $planet);
-
-            $build_queue = resolve(BuildingQueueService::class);
-            $build_queue->cancelItemMissingRequirements($planet);
-
-            // Set the next queue item to start (if applicable)
-            $this->start($player);
-        }
+        });
     }
 
     /**
