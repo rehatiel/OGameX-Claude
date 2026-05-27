@@ -267,6 +267,16 @@ class User extends Authenticatable
     }
 
     /**
+     * All shop booster records for this user.
+     *
+     * @return HasMany<UserBooster>
+     */
+    public function boosters(): HasMany
+    {
+        return $this->hasMany(UserBooster::class);
+    }
+
+    /**
      * All ban records for this user.
      *
      * @return HasMany

@@ -2,12 +2,6 @@
 
 @section('content')
 
-    @if (session('status'))
-        <div class="alert alert-success">
-            {{ session('status') }}
-        </div>
-    @endif
-
     <div id="rewardscomponent" class="maincontent">
         <div id="content">
             <div id="inhalt">
@@ -21,176 +15,149 @@
                         <h2>Rewards</h2>
                     </div>
                     <div class="content">
+
+                        @if (session('error'))
+                            <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+
                         <div class="rewardhint rewardnotifyhidden">
                             <img class="rewardwarningicon" src="/img/icons/04be50e8afc747846a55a646381a16.png">
-                            <span class="rewardwarningtext">
-
-                </span>
+                            <span class="rewardwarningtext"></span>
                         </div>
 
                         <div class="rewardlist">
-                            <a class="tooltipLeft fright questionIcons" style="display: inline-block" title="Rewards will be dispatched every day and can be collected manually. From the 7th day on, no further rewards will be sent out. The first reward will be given on the 2nd day of registration.">
+                            <a class="tooltipLeft fright questionIcons" style="display: inline-block"
+                               title="Rewards are dispatched daily and can be collected manually. From the 8th day on, no further rewards will be sent out. The first reward will be available on the 2nd day of registration.">
                                 <span class="rewardDetail"></span>
                             </a>
                             <br>
-                            <h3>New awards</h3>
 
-                            <h3>Awards not yet reached</h3>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_1 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Let`s go Emperor</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
-
-                                                The supplies from your colony ship have been unloaded and are now available to help develop your world. The perfect time to drive forward the improvements to your empire!
-
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
+                            {{-- Available to claim --}}
+                            @if (count($available) > 0)
+                                <h3>New awards</h3>
+                                @foreach ($available as $reward)
+                                    <div class="rewardlist-item">
+                                        <div class="rewardlistimg {{ $reward['image_class'] }} rewardnotclaim">
+                                            <div class="rewardlist-item-icon">
+                                                <img src="/img/icons/{{ $reward['icon'] }}">
+                                            </div>
+                                            <div class="rewardlist-item-text">
+                                                <h3>{{ $reward['title'] }}</h3>
+                                                <div class="rewardlist-item-wrapper">
+                                                    <p>Greetings, emperor {{ $user->username }}!<br><br>
+                                                        {{ $reward['description'] }}<br><br>
+                                                        Good luck!<br>
+                                                        The OGame Starter Aid</p>
+                                                    <a class="reward-button js-claim-reward"
+                                                       href="javascript:void(0)"
+                                                       data-key="{{ $reward['key'] }}"
+                                                       data-url="{{ route('rewards.claim', $reward['key']) }}">
+                                                        Collect
+                                                    </a>
+                                                </div>
+                                                <div class="rewardlist-item-bottom"></div>
+                                            </div>
                                         </div>
-                                        <div class="rewardlist-item-bottom"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_2 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>The colony is growing!</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
+                                    <br>
+                                @endforeach
+                            @endif
 
-                                                Your subordinates want to make themselves useful. We have provided you with a KRAKEN robot to help accelerate the improvements to your colony. Increase your production and soon your empire will bloom into untold strength!
-
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
+                            {{-- Not yet available --}}
+                            @if (count($notReached) > 0)
+                                <h3>Awards not yet reached</h3>
+                                @foreach ($notReached as $reward)
+                                    <div class="rewardlist-item">
+                                        <div class="rewardlistimg {{ $reward['image_class'] }} rewardnotclaim">
+                                            <div class="rewardlist-item-icon">
+                                                <img src="/img/icons/{{ $reward['icon'] }}">
+                                            </div>
+                                            <div class="rewardlist-item-text">
+                                                <h3>{{ $reward['title'] }}</h3>
+                                                <div class="rewardlist-item-wrapper">
+                                                    <p>Greetings, emperor {{ $user->username }}!<br><br>
+                                                        {{ $reward['description'] }}<br><br>
+                                                        Good luck!<br>
+                                                        The OGame Starter Aid</p>
+                                                    <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
+                                                </div>
+                                                <div class="rewardlist-item-bottom"></div>
+                                            </div>
                                         </div>
-                                        <div class="rewardlist-item-bottom"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_4 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Supply and demand</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
+                                    <br>
+                                @endforeach
+                            @endif
 
-                                                When the metal storage is overflowing and the assembly line stands still because there are no more crystals, it is a good time to pay a visit to the resource merchant. Best check out his offers now.
-
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
+                            {{-- Collected / history --}}
+                            @if (count($collected) > 0)
+                                <h3>Collected awards</h3>
+                                @foreach ($collected as $reward)
+                                    <div class="rewardlist-item">
+                                        <div class="rewardlistimg {{ $reward['image_class'] }} rewardclaimed">
+                                            <div class="rewardlist-item-icon">
+                                                <img src="/img/icons/{{ $reward['icon'] }}">
+                                            </div>
+                                            <div class="rewardlist-item-text">
+                                                <h3>{{ $reward['title'] }}</h3>
+                                                <div class="rewardlist-item-wrapper">
+                                                    <p>{{ $reward['description'] }}</p>
+                                                    <span class="reward-collected-date">
+                                                        Collected {{ $reward['claimed_at']->format('d.m.Y H:i') }}
+                                                    </span>
+                                                </div>
+                                                <div class="rewardlist-item-bottom"></div>
+                                            </div>
                                         </div>
-                                        <div class="rewardlist-item-bottom"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_8 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Progress through technology</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
+                                    <br>
+                                @endforeach
+                            @endif
 
-                                                Your colony has to be protected from enemy emperors. Rocket Launchers are an effective means of fighting back against attacking space ships. Protect your new home!
+                            @if (count($available) === 0 && count($notReached) === 0 && count($collected) === 0)
+                                <p>No rewards available.</p>
+                            @endif
 
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
-                                        </div>
-                                        <div class="rewardlist-item-bottom"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_16 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Progress through technology</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
+                        </div>{{-- .rewardlist --}}
+                    </div>{{-- .content --}}
+                </div>{{-- #buttonz --}}
+            </div>{{-- #inhalt --}}
+        </div>{{-- #content --}}
+    </div>{{-- #rewardscomponent --}}
 
-                                                Our scientists are racking their brains. How about we support them a little in their hard work? A NEWTRON robot should be of good use to them.
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.js-claim-reward').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var url = btn.dataset.url;
+                    btn.classList.add('disabled');
+                    btn.textContent = 'Claiming...';
 
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
-                                        </div>
-                                        <div class="rewardlist-item-bottom"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_32 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Conquer outer space</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
-
-                                                We need to strengthen our forces if we don`t want to end up being our enemy`s play toy. The DETROID robot can accelerate production in the shipyard. That way the fleet will be ready to go at all times!
-
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
-                                        </div>
-                                        <div class="rewardlist-item-bottom"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="rewardlist-item">
-                                <div class="rewardlistimg rewardlistimg_64 rewardnotclaim">
-                                    <div class="rewardlist-item-icon">
-                                        <img src="/img/icons/2251eaefdfdf075833e5247781a4ac.png">
-                                    </div>
-                                    <div class="rewardlist-item-text">
-                                        <h3>Expansion of the empire</h3>
-                                        <div class="rewardlist-item-wrapper">
-                                            <p>Greetings, emperor Lieutenant Cupid!
-
-                                                The foundations for a powerful empire are set. The Commanding Staff are now available to you for 3 days to support you in the consolidation of your empire. Drive research forward and soon new worlds will be open to you and available for your settlers!
-
-                                                Good luck!
-                                                The OGame Starter Aid</p>
-                                            <a class="reward-button disabled" href="javascript:void(0)">Not fulfilled</a>
-                                        </div>
-                                        <div class="rewardlist-item-bottom"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-
-                            <h3>Collected awards</h3>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data.error) {
+                            btn.textContent = 'Collect';
+                            btn.classList.remove('disabled');
+                            alert(data.message);
+                        } else {
+                            location.reload();
+                        }
+                    })
+                    .catch(function () {
+                        btn.textContent = 'Collect';
+                        btn.classList.remove('disabled');
+                        alert('An error occurred. Please try again.');
+                    });
+                });
+            });
+        });
+    </script>
 
 @endsection

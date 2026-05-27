@@ -20,14 +20,15 @@
 
     <div id="inhalt" class="officers">
         <div id="planet">
-            <div id="header_text">
-                <h2>{{ __('t_ingame.premium.recruit_officers') }}</h2>
-            </div>
+            <div id="detailWrapper">
+                <div id="header_text">
+                    <h2>{{ __('t_ingame.premium.recruit_officers') }}</h2>
+                </div>
 
-            <div id="detail" class="detail_screen small">
-                <div id="techDetailLoading"></div>
+                <div id="detail" class="detail_screen small">
+                    <div id="techDetailLoading"></div>
+                </div>
             </div>
-
         </div>	<div class="c-left"></div>
         <div class="c-right"></div>
         <div id="buttonz">
@@ -122,6 +123,10 @@
 
     <script>
         var detailUrl = '{{ route('premium.officer-detail') }}';
+
+        $(document).ready(function () {
+            gfSlider = new GFSlider(getElementByIdWithCache('detailWrapper'));
+        });
     </script>
 
 @endsection

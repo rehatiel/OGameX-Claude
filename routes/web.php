@@ -201,6 +201,10 @@ Route::middleware(['auth', 'banned', 'globalgame', 'locale', 'firstlogin'])->gro
     Route::get('/ajax/premium/officer-detail', [PremiumController::class, 'ajaxOfficerDetail'])->name('premium.officer-detail');
     Route::post('/premium/buy-officer', [PremiumController::class, 'buyOfficer'])->name('premium.buy-officer');
     Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::get('/ajax/shop/item-detail', [ShopController::class, 'ajaxItemDetail'])->name('shop.item-detail');
+    Route::post('/shop/buy/{ref}', [ShopController::class, 'buy'])->name('shop.buy');
+    Route::post('/shop/activate/{ref}', [ShopController::class, 'activate'])->name('shop.activate');
+    Route::post('/shop/buy-and-activate/{ref}', [ShopController::class, 'buyAndActivate'])->name('shop.buyAndActivate');
 
     // Character Class
     Route::get('/characterclass', [CharacterClassController::class, 'index'])->name('characterclass.index');
@@ -232,6 +236,7 @@ Route::middleware(['auth', 'banned', 'globalgame', 'locale', 'firstlogin'])->gro
     Route::get('/buddies/online', [BuddiesController::class, 'getOnlineBuddies'])->name('buddies.online');
 
     Route::get('/rewards', [RewardsController::class, 'index'])->name('rewards.index');
+    Route::post('/rewards/claim/{key}', [RewardsController::class, 'claim'])->name('rewards.claim');
     Route::get('/planet-move', [PlanetMoveController::class, 'index'])->name('planetMove.index');
     Route::post('/ajax/planet-move', [PlanetMoveController::class, 'move'])->name('planetMove.move');
     Route::get('/ajax/planet-move/cancel', [PlanetMoveController::class, 'cancel'])->name('planetMove.cancel');

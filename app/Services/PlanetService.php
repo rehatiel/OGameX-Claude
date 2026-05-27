@@ -838,6 +838,10 @@ class PlanetService
 
         $time_seconds = (int)($time_hours * 3600);
 
+        // Apply Kraken shop booster: -50% building construction time
+        $shopBoosterService = app(\OGame\Services\ShopBoosterService::class);
+        $time_seconds = (int)($time_seconds * $shopBoosterService->getBuildTimeMultiplier($this->player->getUser()));
+
         // Minimum time is always 1 second for all objects/units.
         if ($time_seconds < 1) {
             $time_seconds = 1;
@@ -959,6 +963,10 @@ class PlanetService
 
         $time_seconds = (int)($time_hours * 3600);
 
+        // Apply Detroid shop booster: -50% shipyard construction time
+        $shopBoosterService = app(\OGame\Services\ShopBoosterService::class);
+        $time_seconds = (int)($time_seconds * $shopBoosterService->getShipTimeMultiplier($this->player->getUser()));
+
         // Minimum time is always 1 second for all objects/units.
         if ($time_seconds < 1) {
             $time_seconds = 1;
@@ -1006,6 +1014,13 @@ class PlanetService
         }
         if ($timeMultiplier != 1.0) {
             $time_seconds = (int)($time_seconds * $timeMultiplier);
+        }
+
+        // Apply Newtron shop booster: -50% research time (multiplicative)
+        $shopBoosterService = app(\OGame\Services\ShopBoosterService::class);
+        $newtronMultiplier = $shopBoosterService->getResearchTimeMultiplier($this->player->getUser());
+        if ($newtronMultiplier != 1.0) {
+            $time_seconds = (int)($time_seconds * $newtronMultiplier);
         }
 
         // Minimum time is always 1 second for all objects/units.

@@ -1377,6 +1377,11 @@ return [
         'loca_buy_activate'        => 'Buy and activate',
         'loca_buy_extend'          => 'Buy and extend',
         'loca_buy_dm'              => 'You don\'t have enough Dark Matter. Would you like to purchase some now?',
+        // Action results
+        'purchased'                => 'Item purchased successfully.',
+        'activated'                => 'Booster activated. Construction time will be reduced for the duration.',
+        // Detail panel
+        'btn_buy'                  => 'Buy (:price DM)',
     ],
 
     // -------------------------------------------------------------------------
