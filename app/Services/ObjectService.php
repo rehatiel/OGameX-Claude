@@ -54,7 +54,7 @@ class ObjectService
     }
 
     /**
-     * Get all buildings.
+     * Get all stations.
      *
      * @return array<StationObject>
      */
@@ -64,7 +64,7 @@ class ObjectService
     }
 
     /**
-     * Get all buildings.
+     * Get all research objects.
      *
      * @return array<ResearchObject>
      */
@@ -124,55 +124,44 @@ class ObjectService
     }
 
     /**
-     * Get specific building.
+     * Get specific building by machine name.
      *
      * @param string $machine_name
      * @return BuildingObject
      */
     public static function getBuildingObjectByMachineName(string $machine_name): BuildingObject
     {
-        // Loop through all buildings and return the one with the matching UID
-        foreach (BuildingObjects::get() as $building) {
-            if ($building->machine_name === $machine_name) {
-                return $building;
-            }
+        $object = self::getObjectByMachineName($machine_name);
+        if (!$object instanceof BuildingObject) {
+            throw new RuntimeException('Building not found');
         }
-
-        throw new RuntimeException('Building not found');
+        return $object;
     }
 
     /**
-     * Get specific ship.
+     * Get specific ship by machine name.
      *
      * @param string $machine_name
      * @return ShipObject
      */
     public static function getShipObjectByMachineName(string $machine_name): ShipObject
     {
-        $shipObjects = [...MilitaryShipObjects::get(), ...CivilShipObjects::get()];
-        // Loop through all buildings and return the one with the matching UID
-        foreach ($shipObjects as $ship) {
-            if ($ship->machine_name === $machine_name) {
-                return $ship;
-            }
+        $object = self::getObjectByMachineName($machine_name);
+        if (!$object instanceof ShipObject) {
+            throw new RuntimeException('Ship object not found with machine name: ' . $machine_name);
         }
-
-        throw new RuntimeException('Ship object not found with machine name: ' . $machine_name);
+        return $object;
     }
 
     /**
-     * Get specific game object.
+     * Get specific game object by ID.
      *
      * @param int $object_id
      * @return GameObject
      */
     public static function getObjectById(int $object_id): GameObject
     {
-        $allObjects = [...BuildingObjects::get(), ...StationObjects::get(), ...ResearchObjects::get(),
-                       ...MilitaryShipObjects::get(), ...CivilShipObjects::get(), ...DefenseObjects::get()];
-
-        // Loop through all buildings and return the one with the matching UID
-        foreach ($allObjects as $object) {
+        foreach (self::getObjects() as $object) {
             if ($object->id == $object_id) {
                 return $object;
             }
@@ -182,18 +171,14 @@ class ObjectService
     }
 
     /**
-     * Get specific game object.
+     * Get specific game object by machine name.
      *
      * @param string $machine_name
      * @return GameObject
      */
     public static function getObjectByMachineName(string $machine_name): GameObject
     {
-        $allObjects = [...BuildingObjects::get(), ...StationObjects::get(), ...ResearchObjects::get(),
-                       ...MilitaryShipObjects::get(), ...CivilShipObjects::get(), ...DefenseObjects::get()];
-
-        // Loop through all buildings and return the one with the matching UID
-        foreach ($allObjects as $object) {
+        foreach (self::getObjects() as $object) {
             if ($object->machine_name == $machine_name) {
                 return $object;
             }
@@ -203,79 +188,63 @@ class ObjectService
     }
 
     /**
-     * Get specific research object.
+     * Get specific research object by machine name.
      *
      * @param string $machine_name
      * @return ResearchObject
      */
     public static function getResearchObjectByMachineName(string $machine_name): ResearchObject
     {
-        // Loop through all buildings and return the one with the matching UID
-        $allObjects = ResearchObjects::get();
-        foreach ($allObjects as $object) {
-            if ($object->machine_name === $machine_name) {
-                return $object;
-            }
+        $object = self::getObjectByMachineName($machine_name);
+        if (!$object instanceof ResearchObject) {
+            throw new RuntimeException('Research object not found with machine name: ' . $machine_name);
         }
-
-        throw new RuntimeException('Research object not found with machine name: ' . $machine_name);
+        return $object;
     }
 
     /**
-     * Get specific research object.
+     * Get specific research object by ID.
      *
      * @param int $object_id
      * @return ResearchObject
      */
     public static function getResearchObjectById(int $object_id): ResearchObject
     {
-        // Loop through all buildings and return the one with the matching UID
-        $allObjects = ResearchObjects::get();
-        foreach ($allObjects as $object) {
-            if ($object->id === $object_id) {
-                return $object;
-            }
+        $object = self::getObjectById($object_id);
+        if (!$object instanceof ResearchObject) {
+            throw new RuntimeException('Unit object not found with object ID: ' . $object_id);
         }
-
-        throw new RuntimeException('Unit object not found with object ID: ' . $object_id);
+        return $object;
     }
 
     /**
-     * Get specific unit object.
+     * Get specific unit object by ID.
      *
      * @param int $object_id
      * @return UnitObject
      */
     public static function getUnitObjectById(int $object_id): UnitObject
     {
-        $allObjects = [...MilitaryShipObjects::get(), ...CivilShipObjects::get(), ...DefenseObjects::get()];
-        foreach ($allObjects as $object) {
-            if ($object->id === $object_id) {
-                return $object;
-            }
+        $object = self::getObjectById($object_id);
+        if (!$object instanceof UnitObject) {
+            throw new RuntimeException('Unit object not found with object ID: ' . $object_id);
         }
-
-        throw new RuntimeException('Unit object not found with object ID: ' . $object_id);
+        return $object;
     }
 
     /**
-     * Get specific unit object.
+     * Get specific unit object by machine name.
      *
      * @param string $machine_name
      * @return UnitObject
      */
     public static function getUnitObjectByMachineName(string $machine_name): UnitObject
     {
-        $allObjects = [...MilitaryShipObjects::get(), ...CivilShipObjects::get(), ...DefenseObjects::get()];
-
-        // Loop through all buildings and return the one with the matching UID
-        foreach ($allObjects as $object) {
-            if ($object->machine_name === $machine_name) {
-                return $object;
-            }
+        $object = self::getObjectByMachineName($machine_name);
+        if (!$object instanceof UnitObject) {
+            throw new RuntimeException('Unit object not found with machine name: ' . $machine_name);
         }
-
-        throw new RuntimeException('Unit object not found with machine name: ' . $machine_name);
+        return $object;
     }
 
     /**
@@ -322,7 +291,7 @@ class ObjectService
     {
         $return = array();
 
-        foreach (BuildingObjects::get() as $value) {
+        foreach (self::getBuildingObjects() as $value) {
             if (!empty(($value->storage))) {
                 $return[] = $value;
             }
