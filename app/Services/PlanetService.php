@@ -2115,12 +2115,14 @@ class PlanetService
 
         $building_percentage = $this->getBuildingPercent($object->machine_name) / 10;
 
-        $object->production->planetService = $this;
-        $object->production->playerService = $this->player;
-        $object->production->characterClassService = app(CharacterClassService::class);
-        $object->production->universe_speed = $this->settingsService->economySpeed();
-
-        return $object->production->calculate($object_level, $resource_production_factor * $building_percentage);
+        return $object->production->calculate(
+            $object_level,
+            $resource_production_factor * $building_percentage,
+            $this,
+            $this->player,
+            app(CharacterClassService::class),
+            $this->settingsService->economySpeed()
+        );
     }
 
     /**
@@ -2169,13 +2171,12 @@ class PlanetService
         // Get metal mine object (we only need one to access the production calculator)
         $metalMine = ObjectService::getGameObjectsWithProductionByMachineName('metal_mine');
 
-        // Set up the production calculator with planet context
-        $metalMine->production->planetService = $this;
-        $metalMine->production->playerService = $this->player;
-        $metalMine->production->characterClassService = app(CharacterClassService::class);
-        $metalMine->production->universe_speed = $this->settingsService->economySpeed();
-
-        return $metalMine->production->getCrawlerEnergyConsumption();
+        return $metalMine->production->getCrawlerEnergyConsumption(
+            $this,
+            $this->player,
+            app(CharacterClassService::class),
+            $this->settingsService->economySpeed()
+        );
     }
 
     /**

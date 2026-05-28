@@ -170,11 +170,12 @@ class ResourcesController extends AbstractBuildingsController
         // Get metal mine object to access the crawler energy calculation
         $metalMine = ObjectService::getGameObjectsWithProductionByMachineName('metal_mine');
         $settingsService = app(SettingsService::class);
-        $metalMine->production->planetService = $this->planet;
-        $metalMine->production->playerService = $player;
-        $metalMine->production->characterClassService = app(CharacterClassService::class);
-        $metalMine->production->universe_speed = $settingsService->economySpeed();
-        $crawlerEnergy = $metalMine->production->getCrawlerEnergyConsumption();
+        $crawlerEnergy = $metalMine->production->getCrawlerEnergyConsumption(
+            $this->planet,
+            $player,
+            app(CharacterClassService::class),
+            $settingsService->economySpeed()
+        );
         $productionindex_total->crawler->energy->set($crawlerEnergy);
 
         $production_factor = $this->planet->getResourceProductionFactor();

@@ -101,20 +101,27 @@ class GameObjectProduction
      * Calculates the production index, a listing of production values from each source
      *
      * @param int $level
-     *  The building level
-     *
      * @param float $building_percentage
-     *  The production percentage of the building set by the player
-     *
+     * @param PlanetService $planetService
+     * @param PlayerService $playerService
+     * @param CharacterClassService|null $characterClassService
+     * @param int $universeSpeed
      * @return ProductionIndex
      */
-    public function calculate(int $level, float $building_percentage = 1): ProductionIndex
-    {
-        $productionIndex = new ProductionIndex();
+    public function calculate(
+        int $level,
+        float $building_percentage,
+        PlanetService $planetService,
+        PlayerService $playerService,
+        ?CharacterClassService $characterClassService = null,
+        int $universeSpeed = 1
+    ): ProductionIndex {
+        $this->planetService = $planetService;
+        $this->playerService = $playerService;
+        $this->characterClassService = $characterClassService;
+        $this->universe_speed = $universeSpeed;
 
-        if (!isset($this->planetService, $this->playerService)) {
-            return $productionIndex;
-        }
+        $productionIndex = new ProductionIndex();
 
         $this->calculateMine($productionIndex, $level, $building_percentage);
         // planet slot bonus is counted toward the mine's income
@@ -433,10 +440,23 @@ class GameObjectProduction
      * This is separate from production bonus to avoid counting energy multiple times.
      * Energy consumption: 50 energy per crawler at 100%, 100 energy at 150%
      *
+     * @param PlanetService $planetService
+     * @param PlayerService $playerService
+     * @param CharacterClassService|null $characterClassService
+     * @param int $universeSpeed
      * @return int Negative value representing energy consumption
      */
-    public function getCrawlerEnergyConsumption(): int
-    {
+    public function getCrawlerEnergyConsumption(
+        PlanetService $planetService,
+        PlayerService $playerService,
+        ?CharacterClassService $characterClassService = null,
+        int $universeSpeed = 1
+    ): int {
+        $this->planetService = $planetService;
+        $this->playerService = $playerService;
+        $this->characterClassService = $characterClassService;
+        $this->universe_speed = $universeSpeed;
+
         // Get number of crawlers on planet
         $crawlerCount = $this->planetService->getObjectAmount('crawler');
 

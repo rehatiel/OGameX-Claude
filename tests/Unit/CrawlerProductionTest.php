@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use OGame\Enums\CharacterClass;
+use OGame\GameObjects\Models\BuildingObject;
+use OGame\Services\CharacterClassService;
 use OGame\Services\ObjectService;
 use Tests\UnitTestCase;
 
@@ -13,18 +15,29 @@ use Tests\UnitTestCase;
 class CrawlerProductionTest extends UnitTestCase
 {
     /**
-     * Helper method to get configured metal mine object for production calculation.
+     * Helper method to get metal mine object for production calculation.
      */
-    private function getConfiguredMetalMine(): \OGame\GameObjects\Models\BuildingObject
+    private function getMetalMine(): BuildingObject
     {
         $objectService = resolve(ObjectService::class);
         $metalMine = $objectService->getObjectById(1); // Metal Mine
-        assert($metalMine instanceof \OGame\GameObjects\Models\BuildingObject);
-        $metalMine->production->planetService = $this->planetService;
-        $metalMine->production->playerService = $this->playerService;
-        $metalMine->production->characterClassService = app(\OGame\Services\CharacterClassService::class);
-        $metalMine->production->universe_speed = $this->settingsService->economySpeed();
+        assert($metalMine instanceof BuildingObject);
         return $metalMine;
+    }
+
+    /**
+     * Helper to call calculate() on a metal mine with current test context.
+     */
+    private function calculateMineProduction(BuildingObject $metalMine, int $level): \OGame\Models\ProductionIndex
+    {
+        return $metalMine->production->calculate(
+            $level,
+            1.0,
+            $this->planetService,
+            $this->playerService,
+            app(CharacterClassService::class),
+            $this->settingsService->economySpeed()
+        );
     }
 
     /**
@@ -42,8 +55,8 @@ class CrawlerProductionTest extends UnitTestCase
         ]);
 
         // Get production for metal mine
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionIndex = $metalMine->production->calculate(10);
+        $metalMine = $this->getMetalMine();
+        $productionIndex = $this->calculateMineProduction($metalMine, 10);
 
         // Each crawler provides 0.02% bonus (100 crawlers = 2% bonus)
         // Crawler bonus should be > 0 for metal (only metal mine produces metal)
@@ -66,8 +79,8 @@ class CrawlerProductionTest extends UnitTestCase
         ]);
 
         // Get production with 200 crawlers
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionIndexWith200 = $metalMine->production->calculate(5);
+        $metalMine = $this->getMetalMine();
+        $productionIndexWith200 = $this->calculateMineProduction($metalMine, 5);
 
         // Now test with exactly max crawlers (120)
         $this->createAndSetPlanetModel([
@@ -76,7 +89,7 @@ class CrawlerProductionTest extends UnitTestCase
             'deuterium_synthesizer' => 5,
             'crawler' => 120,
         ]);
-        $productionIndexWith120 = $metalMine->production->calculate(5);
+        $productionIndexWith120 = $this->calculateMineProduction($metalMine, 5);
 
         // Both should have the same crawler bonus because max is 120
         $this->assertEquals(
@@ -105,15 +118,15 @@ class CrawlerProductionTest extends UnitTestCase
         $user->character_class = CharacterClass::GENERAL->value;
         // Don't save - this is a dummy user for unit tests
 
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionNonCollector = $metalMine->production->calculate(10);
+        $metalMine = $this->getMetalMine();
+        $productionNonCollector = $this->calculateMineProduction($metalMine, 10);
         $nonCollectorBonus = $productionNonCollector->crawler->metal->get();
 
         // Now test with Collector class
         $user->character_class = CharacterClass::COLLECTOR->value;
         // Don't save - this is a dummy user for unit tests
 
-        $productionCollector = $metalMine->production->calculate(10);
+        $productionCollector = $this->calculateMineProduction($metalMine, 10);
         $collectorBonus = $productionCollector->crawler->metal->get();
 
         // Collector should get 1.5x the crawler bonus
@@ -154,8 +167,8 @@ class CrawlerProductionTest extends UnitTestCase
         ]);
 
         // Get production (mines are level 0)
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionIndex = $metalMine->production->calculate(0);
+        $metalMine = $this->getMetalMine();
+        $productionIndex = $this->calculateMineProduction($metalMine, 0);
 
         // Crawler bonus should be 0 because max usable crawlers is 0
         $this->assertEquals(0, $productionIndex->crawler->metal->get(), 'Crawlers should not work without mines');
@@ -176,8 +189,8 @@ class CrawlerProductionTest extends UnitTestCase
             'crawler' => 192,
         ]);
 
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionWith192 = $metalMine->production->calculate(10);
+        $metalMine = $this->getMetalMine();
+        $productionWith192 = $this->calculateMineProduction($metalMine, 10);
 
         // Now test with 1 more crawler (should not increase bonus)
         $this->createAndSetPlanetModel([
@@ -186,7 +199,7 @@ class CrawlerProductionTest extends UnitTestCase
             'deuterium_synthesizer' => 6,
             'crawler' => 193,
         ]);
-        $productionWith193 = $metalMine->production->calculate(10);
+        $productionWith193 = $this->calculateMineProduction($metalMine, 10);
 
         // Bonus should be the same
         $this->assertEquals(
@@ -211,8 +224,8 @@ class CrawlerProductionTest extends UnitTestCase
             'crawler' => 0,
         ]);
 
-        $metalMine = $this->getConfiguredMetalMine();
-        $productionWithout = $metalMine->production->calculate(10);
+        $metalMine = $this->getMetalMine();
+        $productionWithout = $this->calculateMineProduction($metalMine, 10);
         $totalWithout = $productionWithout->total->metal->get();
 
         // Test with crawlers
@@ -222,7 +235,7 @@ class CrawlerProductionTest extends UnitTestCase
             'deuterium_synthesizer' => 10,
             'crawler' => 100,
         ]);
-        $productionWith = $metalMine->production->calculate(10);
+        $productionWith = $this->calculateMineProduction($metalMine, 10);
         $totalWith = $productionWith->total->metal->get();
 
         // Total production should increase
