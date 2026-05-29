@@ -9,41 +9,46 @@
     $baClass    = ($amount === 0 && $canAfford) ? 'build-it' : 'build-it_disabled showGetMoreDmPopup';
 @endphp
 
-<div id="itemDetails" data-uuid="{{ $item['ref'] }}" class="detail_screen">
+<div id="itemDetails" data-uuid="{{ $item['ref'] }}">
     <a class="close_details" ref="{{ $item['ref'] }}" href="javascript:void(0);"></a>
 
-    <div class="detail_header">
+    <div id="pic">
         <div class="item_img r_{{ $item['rarity'] }}"
-             style="background-image: url(/img/icons/{{ $item['image_hash'] }}-100x.png);"></div>
-        <h2>{{ $itemName }}</h2>
+             style="background-image: url(/img/icons/{{ $item['image_hash'] }}-100x.png); width:196px; height:196px; background-size:196px; background-position:center; cursor:default; float:none;">
+        </div>
     </div>
 
-    <div class="detail_content">
-        <p class="detail_description">{!! $itemDesc !!}</p>
+    <div id="content">
+        <h2>{{ $itemName }}</h2>
+        <div id="wrapper">
+            <p class="detail_description">{!! $itemDesc !!}</p>
 
-        <div class="dm_detail">
-            <table>
-                <tr>
-                    <td>{{ __('t_ingame.shop.dark_matter') }}:</td>
-                    <td class="{{ $canAfford ? '' : 'text-red' }}">{{ number_format($user->dark_matter, 0, ',', '.') }}</td>
-                </tr>
-                <tr>
-                    <td>{{ __('t_ingame.shop.item_price') }}:</td>
-                    <td>{{ number_format($item['price'], 0, ',', '.') }}</td>
-                </tr>
-                <tr>
-                    <td>{{ __('t_ingame.shop.item_in_inventory') }}:</td>
-                    <td><span class="amount">{{ $amount }}</span></td>
-                </tr>
-                @if ($isActive && $timeLeft > 0)
+            <div class="dm_detail">
+                <table>
                     <tr>
-                        <td>{{ __('t_ingame.shop.item_duration') }}:</td>
-                        <td>{{ gmdate('H:i:s', $timeLeft) }}</td>
+                        <td>{{ __('t_ingame.shop.dark_matter') }}:</td>
+                        <td class="{{ $canAfford ? '' : 'text-red' }}">{{ number_format($user->dark_matter, 0, ',', '.') }}</td>
                     </tr>
-                @endif
-            </table>
+                    <tr>
+                        <td>{{ __('t_ingame.shop.item_price') }}:</td>
+                        <td>{{ number_format($item['price'], 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ __('t_ingame.shop.item_in_inventory') }}:</td>
+                        <td><span class="amount">{{ $amount }}</span></td>
+                    </tr>
+                    @if ($isActive && $timeLeft > 0)
+                        <tr>
+                            <td>{{ __('t_ingame.shop.item_duration') }}:</td>
+                            <td>{{ gmdate('H:i:s', $timeLeft) }}</td>
+                        </tr>
+                    @endif
+                </table>
+            </div>
         </div>
+    </div>
 
+    <div id="features" style="clear:both;">
         {{-- Buy button: always visible, adds 1 to inventory --}}
         <a class="item {{ $buyClass }}" rel="{{ $buyUrl }}" href="javascript:void(0);"
            title="{{ $itemName }}">

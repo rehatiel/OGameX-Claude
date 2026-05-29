@@ -21,7 +21,7 @@
     $canAfford = $darkMatter >= $cost;
 @endphp
 
-<div id="premiumContent" class="detail_screen">
+<div id="premiumContent">
     <div class="detail_header">
         <div class="officers100 {{ $officerClass }}"></div>
         <h2>{{ $tooltipTitle ?: $label }}</h2>
